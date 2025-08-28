@@ -1,0 +1,1 @@
+from models.rank import RankModel # type: ignore
