@@ -11,8 +11,9 @@ import os
 from dotenv import load_dotenv
 from flask import Flask
 
-from api.models import db # type: ignore
-from api.routes import bp # type: ignore
+from src.api.v1.routes import bp # type: ignore
+from src.extensions import db
+
 
 
 def create_app(db_url=None):

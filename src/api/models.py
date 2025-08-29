@@ -1,8 +1,18 @@
 # type: ignore
 # disable type checking on file as SQLAlchmey isn't playing nice with MyPy
-from flask_sqlalchemy import SQLAlchemy
+"""
+SQLAlchemy models for the API.
+"""
 
-db = SQLAlchemy()
+###################################################################################################
+#  Imports
+###################################################################################################
+
+from src import db
+
+###################################################################################################
+# Classes
+###################################################################################################
 
 class RankModel(db.Model):
     __tablename__ = 'ranks'

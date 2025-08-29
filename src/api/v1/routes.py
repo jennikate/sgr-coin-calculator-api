@@ -4,4 +4,4 @@ bp = Blueprint("main", __name__)
 
 @bp.route("/")
 def hello():
-    return "Hello from Flask!"
+    return "Hello!"
