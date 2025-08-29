@@ -14,8 +14,20 @@ Activate the venv
 source  .venv/bin/activate
 ```
 
+## Install dependencies
+
 Install dependencies
 ```bash
 uv sync
 ```
+
+## Setup your .env file
+
+
+## Run app locally
+
+```bash
+uv run python run.py
+```
+
 
