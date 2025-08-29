@@ -10,9 +10,10 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from flask_smorest import Api # type: ignore
 
-from src.api.v1.routes import bp # type: ignore
 from src.extensions import db
+from src.api.v1.rank_routes import blp as RankBlueprint
 
 
 
@@ -23,15 +24,23 @@ def create_app(db_url=None):
     ## Flask Config 
     # if an exception occurs hidden inside an extension of Flask, propogate it into the main app so we can see it
     app.config["PROPAGATE_EXCEPTIONS"] = True
+    ## Flask smorest Config
+    app.config["API_TITLE"] = "SGR Coin Calculator REST API"
+    app.config["API_VERSION"] = "v1"
+    app.config["OPENAPI_VERSION"] = "3.0.3"
+    app.config["OPENAPI_URL_PREFIX"] = "/"
+    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
+    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
     # SQLAlchemy Config
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # initialise and connect Flask app to SQLAlchemy
     db.init_app(app) 
+    api = Api(app)
 
-    # # Register blueprints
-    app.register_blueprint(bp)
+    # # Register blueprints for smorest
+    api.register_blueprint(RankBlueprint)
     
     print("APP RUNNING")
 
