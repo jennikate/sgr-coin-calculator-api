@@ -62,6 +62,25 @@ class RankResource(MethodView):
             abort(500, message=str(e))
 
         return rank
+    
+@blp.route("/ranks")
+class RanksResource(MethodView):
+    """
+    Resources for getting all ranks.
+    """
+    @blp.response(200, RankSchema(many=True)) # serialize outgoing JSON
+    def get(self):
+        """
+        Get all ranks
+        """
+        try:
+            ranks = RankModel.query.all()
+        except SQLAlchemyError:
+            abort(500, message="An error occurred when querying the db")
+        except Exception as e:
+            abort(500, message=str(e))
+
+        return ranks
 
 
 
