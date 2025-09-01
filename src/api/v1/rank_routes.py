@@ -20,7 +20,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 
 from api.models import RankModel
-from api.schemas import RankQueryArgsSchema, RankSchema
+from api.schemas import MessageSchema, RankQueryArgsSchema, RankSchema
 
 from src import db
 
@@ -124,6 +124,24 @@ class RankByIdResource(MethodView):
         
         return rank
 
+    @blp.response(200, MessageSchema)
+    def delete(self, rank_id):
+        """
+        Delete rank by id
+        """
+        rank = RankModel.query.get_or_404(rank_id)
+
+        try:
+            db.session.delete(rank)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message=str(e))
+
+        return { "message": f"Rank id {rank_id} deleted" }, 200
 
     
 @blp.route("/ranks")
@@ -138,7 +156,7 @@ class RanksResource(MethodView):
         """
         try:
             ranks = RankModel.query.order_by(RankModel.id).all()
-            
+
         except SQLAlchemyError:
             abort(500, message="An error occurred when querying the db")
         except Exception as e:

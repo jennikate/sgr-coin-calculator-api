@@ -17,6 +17,10 @@ from src import db
 #  Schemas
 ###################################################################################################
 
+class MessageSchema(Schema):
+    message = fields.String(required=True, metadata={"example": "Rank deleted successfully"})
+
+
 # We make a plain schema for each model to avoid circular imports
 # These are setup now in anticipation of needing more complex schemas later
 
