@@ -83,6 +83,49 @@ class RankResource(MethodView):
 
         return results
     
+
+@blp.route("/rank/<int:rank_id>")
+class RankByIdResource(MethodView):
+    """
+    Resources for updating or deleting a rank by id.
+    """
+    @blp.response(200, RankSchema)
+    def get(self, rank_id):
+        """
+        Get rank by id
+        """
+        rank = RankModel.query.get_or_404(rank_id)
+        return rank
+    
+    @blp.arguments(RankSchema(partial=True)) # allow partial updates even though all fields required in schema
+    @blp.response(200, RankSchema)
+    def patch(self, update_data, rank_id):
+        """
+        Update rank partially by id
+        """
+        rank = RankModel.query.get_or_404(rank_id)
+
+        if "name" in update_data:
+            rank.name = update_data["name"]
+        if "position" in update_data:
+            rank.position = update_data["position"]
+        if "share" in update_data:
+            rank.share = update_data["share"]
+
+        try:
+            db.session.add(rank)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message=str(e))
+        
+        return rank
+
+
+    
 @blp.route("/ranks")
 class RanksResource(MethodView):
     """
@@ -94,7 +137,8 @@ class RanksResource(MethodView):
         Get all ranks
         """
         try:
-            ranks = RankModel.query.all()
+            ranks = RankModel.query.order_by(RankModel.id).all()
+            
         except SQLAlchemyError:
             abort(500, message="An error occurred when querying the db")
         except Exception as e:
