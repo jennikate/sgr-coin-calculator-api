@@ -20,7 +20,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 
 from api.models import RankModel
-from api.schemas import RankSchema
+from api.schemas import RankQueryArgsSchema, RankSchema
 
 from src import db
 
@@ -62,6 +62,26 @@ class RankResource(MethodView):
             abort(500, message=str(e))
 
         return rank
+    
+
+    @blp.arguments(RankQueryArgsSchema, location="query")
+    @blp.response(200, RankSchema(many=True)) # serialize outgoing JSON
+    def get(self, args):
+        """Get ranks by query parameters"""
+        query = RankModel.query
+
+        if "name" in args:
+            checked = "name"
+            query = query.filter_by(name=args["name"])
+        if "position" in args:
+            checked = "position"
+            query = query.filter_by(position=args["position"])
+
+        results = query.all()
+        if not results:
+            abort(404, message=f"No ranks found for {checked}: {args[checked]}")
+
+        return results
     
 @blp.route("/ranks")
 class RanksResource(MethodView):

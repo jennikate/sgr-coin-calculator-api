@@ -48,6 +48,15 @@ class PlainRankSchema(Schema):
     def validate_share(self, value, **kwargs):
         if value < 0:
             raise ValidationError("Share must be a non-negative float.")
+        
+    
+class RankQueryArgsSchema(Schema):
+    name = fields.String(
+        required=False,
+        metadata={"description": "Filter by rank name"})
+    position = fields.Integer(
+        required=False, 
+        metadata={"description": "Filter by rank position"})
 
 
 class RankSchema(PlainRankSchema):

@@ -9,11 +9,12 @@ returns the Flask application instance.
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify
 from flask_smorest import Api # type: ignore
+from marshmallow import ValidationError # type: ignore
 
 from src.extensions import db
-from src.api.v1.rank_routes import blp as RankBlueprint
+from .api.v1.rank_routes import blp as RankBlueprint
 
 
 
@@ -38,6 +39,14 @@ def create_app(db_url=None):
     # initialise and connect Flask app to SQLAlchemy
     db.init_app(app) 
     api = Api(app)
+
+    # Handle Marshmallow validation errors
+    @app.errorhandler(ValidationError)
+    def handle_marshmallow_error(err):
+        return jsonify({
+            "message": "Validation error",
+            "errors": err.messages
+        }), 400
 
     # # Register blueprints for smorest
     api.register_blueprint(RankBlueprint)
