@@ -16,6 +16,7 @@ Classes:
 ###################################################################################################
 
 from flask.views import MethodView
+from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 
