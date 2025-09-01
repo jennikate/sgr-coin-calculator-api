@@ -8,6 +8,7 @@ dependencies = [
     "build>=1.3.0",
     "flask>=3.1.2",
     "flask-migrate>=4.1.0",
+    "flask-smorest>=0.46.1",
     "load-dotenv>=0.1.0",
     "psycopg2-binary>=2.9.10",
     "sqlalchemy>=2.0.43",
@@ -22,5 +23,8 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"api" = ["py.typed"]
 
 
