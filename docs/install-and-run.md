@@ -30,4 +30,8 @@ uv sync
 uv run python run.py
 ```
 
+## Run tests
+
+https://docs.pytest.org/en/stable/how-to/usage.html
+
 

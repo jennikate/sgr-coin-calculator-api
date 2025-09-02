@@ -23,7 +23,7 @@ from .api.v1.rank_routes import blp as RankBlueprint
 #  Create App
 ###################################################################################################
 
-def create_app(db_url=None):
+def create_app(config_class=None):
     app = Flask(__name__)
     load_dotenv()
 
@@ -39,6 +39,8 @@ def create_app(db_url=None):
     app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
     app.logger.addHandler(log_handler)
 
+    app.logger.debug(f"FLASK_ENV is {os.getenv('FLASK_ENV')}")
+    app.logger.debug(f"Using config class: {config_class}")
 
     ## FLASK Config 
     # if an exception occurs hidden inside an extension of Flask, propogate it into the main app so we can see it
@@ -50,26 +52,30 @@ def create_app(db_url=None):
     app.config["OPENAPI_URL_PREFIX"] = "/"
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
     app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
     # SQLALCHEMY Config
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    if config_class == "testing":
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("TEST_DATABASE_URL", "postgresql://test_user:test_password@localhost:5544/myapp_test")
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        app.config["TESTING"] = True
+    # elif config_class == "production":
+    #     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+    #     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/myapp")
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        app.config["DEBUG"] = True
+
 
     # initialise and connect Flask app to SQLAlchemy
     db.init_app(app) 
     api = Api(app)
 
-    # Handle Marshmallow validation errors
-    @app.errorhandler(ValidationError)
-    def handle_marshmallow_error(err):
-        return jsonify({
-            "message": "Validation error",
-            "errors": err.messages
-        }), 400
 
-    # # Register blueprints for smorest
+    # Register blueprints for smorest
     api.register_blueprint(RankBlueprint)
     
-    app.logger.info("App created")
+    app.logger.info(f"App created using DB: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
     return app
 

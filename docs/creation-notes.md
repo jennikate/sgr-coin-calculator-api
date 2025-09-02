@@ -81,3 +81,19 @@ The run.py file will call the create_app() from the src folder (what is in the _
 
 Can also add the `logger` and the `CORS` setup to the run.py file.
 
+---
+
+## When setting up docker for test
+
+Have to create the database within the container before pytests can use it
+
+```
+docker exec -it <container_name> psql -U test_user -d postgres
+CREATE DATABASE myapp_test;
+```
+
+To double check the container name when it's running
+```
+docker ps
+```
+The `names` column at the end is the name you want

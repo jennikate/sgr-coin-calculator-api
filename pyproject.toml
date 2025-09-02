@@ -10,7 +10,10 @@ dependencies = [
     "flask-migrate>=4.1.0",
     "flask-smorest>=0.46.1",
     "load-dotenv>=0.1.0",
+    "psycopg2>=2.9.10",
     "psycopg2-binary>=2.9.10",
+    "pytest>=8.4.1",
+    "requests>=2.32.5",
     "sqlalchemy>=2.0.43",
 ]
 
@@ -27,4 +30,13 @@ where = ["src"]
 [tool.setuptools.package-data]
 "api" = ["py.typed"]
 
+# pytest.ini
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = "-ra -q"
+testpaths = ["tests"]
 
+[dependency-groups]
+dev = [
+    "pytest-docker>=3.2.3",
+]
