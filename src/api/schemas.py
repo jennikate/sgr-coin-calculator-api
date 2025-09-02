@@ -20,15 +20,11 @@ from src import db
 class MessageSchema(Schema):
     message = fields.String(required=True, metadata={"example": "Rank deleted successfully"})
 
-
-# We make a plain schema for each model to avoid circular imports
-# These are setup now in anticipation of needing more complex schemas later
-
-class PlainRankSchema(Schema):
+class RankSchema(Schema):
     id = fields.Int(dump_only=True)
-    name = fields.Str(required=True)
-    position = fields.Int(required=True)
-    share = fields.Float(required=True)
+    name = fields.Str(required=True, metadata={"description": "The name of the rank", "example": "Private"})
+    position = fields.Int(required=True, metadata={"description": "The position of the rank", "example": 1})
+    share = fields.Float(required=True, metadata={"description": "The share of the total pay allocated to this rank", "example": 0.50})
 
     @validates('name')
     def validate_name(self, value, **kwargs):
@@ -63,8 +59,6 @@ class RankQueryArgsSchema(Schema):
     name = fields.String(required=False, metadata={"description": "Filter by rank name"})
     position = fields.Integer(required=False,  metadata={"description": "Filter by rank position"})
 
-class RankSchema(PlainRankSchema):
-    pass
 
 ###################################################################################################
 #  End of File

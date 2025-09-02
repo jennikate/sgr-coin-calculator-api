@@ -15,6 +15,7 @@ Classes:
 #  Imports
 ###################################################################################################
 
+from flask import current_app
 from flask.views import MethodView
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
@@ -32,14 +33,14 @@ from src import db
 # TODO: consider moving Blueprint config to a separate file
 # TODO: work out where the best place to put the url_prefix is
 
-blp = Blueprint("rank", __name__, url_prefix="/v1", description="Rank operations")
+blp = Blueprint("rank", __name__, url_prefix="/v1/ranks", description="Operations on ranks")
 
 
 ###################################################################################################
 #  Classes (flask-smorest resources)
 ###################################################################################################
 
-@blp.route("/rank")
+@blp.route("/")
 class RankResource(MethodView):
     """
     Resources for managing a rank.
@@ -50,9 +51,13 @@ class RankResource(MethodView):
         """
         Add a new rank
         """
-        rank = RankModel(**new_data) # can do this as we've validated data with .arguments above
-
+        current_app.logger.debug(f"Creating rank with data: {new_data}")
+        # any validation errors occur here before we try to create the object
+        # this is because the schema holds the validation
+        # and that is done before we enter the method
+        # therefore we don't need to catch ValidationError here
         try:
+            rank = RankModel(**new_data) # can do this as we've validated data with .arguments above
             db.session.add(rank)
             db.session.commit()
         except SQLAlchemyError:
@@ -66,7 +71,7 @@ class RankResource(MethodView):
     
 
     @blp.arguments(RankQueryArgsSchema, location="query")
-    @blp.response(200, RankSchema(many=True)) # serialize outgoing JSON
+    @blp.response(200, RankSchema(many=True))
     def get(self, args):
         """Get ranks by query parameters"""
         query = RankModel.query
@@ -85,7 +90,7 @@ class RankResource(MethodView):
         return results
     
 
-@blp.route("/rank/<int:rank_id>")
+@blp.route("/<rank_id>")
 class RankByIdResource(MethodView):
     """
     Resources for updating or deleting a rank by id.
@@ -143,28 +148,6 @@ class RankByIdResource(MethodView):
             abort(500, message=str(e))
 
         return { "message": f"Rank id {rank_id} deleted" }, 200
-
-    
-@blp.route("/ranks")
-class RanksResource(MethodView):
-    """
-    Resources for getting all ranks.
-    """
-    @blp.response(200, RankSchema(many=True)) # serialize outgoing JSON
-    def get(self):
-        """
-        Get all ranks
-        """
-        try:
-            ranks = RankModel.query.order_by(RankModel.id).all()
-
-        except SQLAlchemyError:
-            abort(500, message="An error occurred when querying the db")
-        except Exception as e:
-            abort(500, message=str(e))
-
-        return ranks
-
 
 
 ###################################################################################################
