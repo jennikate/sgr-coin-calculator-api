@@ -35,10 +35,21 @@ def create_app(config_name):
     app = Flask(__name__)
     load_dotenv()
 
-    app.logger.debug("---------- starting app ----------")
+    # LOGGING CONFIG
+    # Remove default handler
+    del app.logger.handlers[:]
+
+    log_handler = logging.StreamHandler()
+    # if want to log to file instead can use:
+    # log_handler = RotatingFileHandler("flask_api_log.log", maxBytes=10000, backupCount=1)
+
+    log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s"))
+    app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    app.logger.addHandler(log_handler)
+
+    app.logger.debug("---------- starting create_app ----------")
     app.logger.debug(f"Config name is: {config_name}")
     app.logger.debug(f"DB URI: {os.getenv('DATABASE_URL')}")
-    # app.config.from_object(config[config_name])
 
     ## FLASK Config 
     # if an exception occurs hidden inside an extension of Flask, propogate it into the main app so we can see it

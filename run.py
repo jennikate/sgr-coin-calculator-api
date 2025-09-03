@@ -24,26 +24,14 @@ from api.models import db # type: ignore
 
 load_dotenv()
 config_name = os.getenv("FLASK_ENV")
+print(f"Config name is: {config_name}")
 app = create_app(config_name)
 
 migrate = Migrate(app, db)
 
-# LOGGING CONFIG
-# Remove default handler
-del app.logger.handlers[:]
 
-log_handler = logging.StreamHandler()
-# if want to log to file instead can use:
-# log_handler = RotatingFileHandler("flask_api_log.log", maxBytes=10000, backupCount=1)
+app.logger.info("---------- run.py finished ----------")
 
-log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s"))
-app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
-app.logger.addHandler(log_handler)
-
-
-app.logger.info("---------- starting run.py ----------")
-app.logger.debug(f"Config name is: {config_name}")
-app.logger.info("App running")
 
 # adding for when I get to the CORS parts, this is how it was done in our other projects
 # from flask_cors import CORS (add flask_cors to project)
