@@ -1,0 +1,24 @@
+services:
+  web:
+    build: .
+    container_name: flask_app
+    command: pytest -v
+    environment:
+      # FLASK_ENV: development
+      # DATABASE_URL: postgresql://postgres:postgres@db:5432/app_db # not in use right now
+      TEST_DATABASE_URL: postgresql://postgres:postgres@db:5432/test_db
+    depends_on:
+      - db
+    volumes:
+      - .:/app  # optional: mount code for faster dev/test
+
+  db:
+    image: postgres:15
+    container_name: flask_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"

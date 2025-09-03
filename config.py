@@ -50,7 +50,8 @@ class TestingConfig(BaseConfig):
     """
 
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://user:test@localhost/flaskdb"
+    # SQLALCHEMY_DATABASE_URI = "postgresql://user:test@localhost/flaskdb"
+    SQLALCHEMY_DATABASE_URI = "postgresql://user:pass@localhost:5432/app_test"
 
 
 config = {
