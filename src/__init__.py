@@ -13,7 +13,6 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, current_app, jsonify
 from flask_smorest import Api # type: ignore
-from marshmallow import ValidationError # type: ignore
 
 from config import config
 from src.extensions import db
