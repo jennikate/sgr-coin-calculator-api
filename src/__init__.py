@@ -18,6 +18,12 @@ from marshmallow import ValidationError # type: ignore
 from src.extensions import db
 from .api.v1.rank_routes import blp as RankBlueprint
 
+###################################################################################################
+#  Blueprints, extensions, etc.
+###################################################################################################
+
+def register_blueprints(app):
+    app.register_blueprint(RankBlueprint)
 
 ###################################################################################################
 #  Create App
@@ -66,9 +72,8 @@ def create_app(db_url=None):
             "errors": err.messages
         }), 400
 
-    # # Register blueprints for smorest
-    api.register_blueprint(RankBlueprint)
-    
+
+    register_blueprints(app)
     app.logger.info("App created")
 
     return app
