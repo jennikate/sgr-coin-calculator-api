@@ -64,14 +64,6 @@ def create_app(db_url=None):
     db.init_app(app) 
     api = Api(app)
 
-    # Handle Marshmallow validation errors
-    @app.errorhandler(ValidationError)
-    def handle_marshmallow_error(err):
-        return jsonify({
-            "message": "Validation error",
-            "errors": err.messages
-        }), 400
-
 
     register_blueprints(app)
     app.logger.info("App created")
