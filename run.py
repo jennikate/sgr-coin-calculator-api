@@ -6,10 +6,10 @@ create_app()
 ###################################################################################################
 #  Imports
 ###################################################################################################
-import logging
-from logging.handlers import RotatingFileHandler
+
 import os
 
+from flask import logging
 from flask_migrate import Migrate # type: ignore
 
 from src import create_app
@@ -25,6 +25,18 @@ config_name = os.getenv("FLASK_ENV")
 app = create_app(config_name)
 
 migrate = Migrate(app, db)
+
+# LOG LEVEL config
+    # Remove default handler
+del app.logger.handlers[:]
+
+log_handler = logging.StreamHandler()
+# if want to log to file instead can use:
+# log_handler = RotatingFileHandler("flask_api_log.log", maxBytes=10000, backupCount=1)
+
+log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s"))
+app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
+app.logger.addHandler(log_handler)
 
 app.logger.info("App running")
 
