@@ -16,7 +16,7 @@ marshmallow==4.0.1
 packaging==25.0
 psycopg2-binary==2.9.10
 python-dotenv==1.1.1
--e git+ssh://git@github.com/jennikate/sgr-coin-calculator-api.git@f03199a79eb9c11b100ba0c7bc8486d5ee8e523e#egg=sgr_coin_calculator_api
+-e git+ssh://git@github.com/jennikate/sgr-coin-calculator-api.git@ad90099a2276b2c651b1ca59c1218cb0fe3dd735#egg=sgr_coin_calculator_api
 SQLAlchemy==2.0.43
 typing_extensions==4.15.0
 webargs==8.7.0

@@ -9,21 +9,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 
-dependencies = [
-    "flask>=3.1.2",
-    "flask-migrate>=4.1.0",
-    "flask-smorest>=0.46.1",
-    "load-dotenv>=0.1.0",
-    "psycopg2-binary>=2.9.10",
-    "sqlalchemy>=2.0.43",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-flask",
-    "sqlalchemy-utils",  # useful for test db setup
-]
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
 
 [tool.setuptools]
 package-dir = {"" = "src"}  # use src/ layout
