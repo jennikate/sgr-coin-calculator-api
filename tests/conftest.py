@@ -6,41 +6,81 @@ Test configuration.
 # Imports
 ###################################################################################################
 
+import os
 import pytest
 
-from sqlalchemy import text
+from alembic import command
+from alembic.config import Config
+from sqlalchemy_utils import drop_database, create_database # type: ignore
+from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import inspect
+
 from src import create_app, db as _db
 
 
 ###################################################################################################
 # Fixtures
 ###################################################################################################
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+MIGRATIONS_DIR = os.path.join(BASE_DIR, "migrations")
 
 @pytest.fixture(scope="session")
 def app():
-    """Create and configure a new app instance for tests."""
+    """Create Flask app in testing config and push context."""
     app = create_app("testing")
-    with app.app_context():
-        yield app
+    ctx = app.app_context()
+    ctx.push()
+    return app
 
 
-@pytest.fixture(scope="session")
-def db(app):
-    schema_name = "test_schema"
+@pytest.fixture(scope="session", autouse=True)
+def apply_migrations(app):
+    """Drop & recreate the test DB, then run migrations fresh."""
 
-    engine = _db.engine
-    with engine.connect() as conn:
-        conn.execute(text(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE;"))
-        conn.execute(text(f"CREATE SCHEMA {schema_name};"))
-        conn.execute(text(f"SET search_path TO {schema_name};"))
+    app.logger.info("---------- apply_migrations fixture ----------")
 
-    _db.metadata.schema = schema_name
-    with app.app_context():
-        _db.drop_all() # drop old tables to ensure clean state
-        _db.create_all() # create all tables from your models
-        yield _db
-        _db.drop_all()
+    uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    app.logger.debug(f"Recreating test DB at {uri}")
 
-    with engine.connect() as conn:
-        conn.execute(text(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE;"))
-    
+    # Drop + create ensures we never depend on downgrade()
+    drop_database(uri)
+    create_database(uri)
+
+    # Configure Alembic
+    alembic_cfg = Config(os.path.join(MIGRATIONS_DIR, "alembic.ini"))
+    alembic_cfg.set_main_option("script_location", MIGRATIONS_DIR)
+    alembic_cfg.set_main_option("sqlalchemy.url", uri)
+
+    # Apply all migrations
+    command.upgrade(alembic_cfg, "head")
+
+    # Verify important tables exist
+    inspector = inspect(_db.engine)
+    tables = inspector.get_table_names()
+    app.logger.debug(f"Tables after migration: {tables}")
+
+    if "ranks" not in tables:
+        raise RuntimeError("Migration did not create 'ranks' table")
+
+    yield
+
+    # optional cleanup: drop DB after test session
+    # drop_database(uri)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def session(app):
+    """Run each test in its own transaction (rollback after)."""
+    connection = _db.engine.connect()
+    transaction = connection.begin()
+
+    SessionFactory = sessionmaker(bind=connection, expire_on_commit=False)
+    session = scoped_session(SessionFactory)
+
+    _db.session = session
+
+    yield session
+
+    transaction.rollback()
+    connection.close()
+    session.remove()

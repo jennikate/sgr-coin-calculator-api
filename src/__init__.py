@@ -12,6 +12,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, current_app, jsonify
+from flask_migrate import Migrate # type: ignore
 from flask_smorest import Api # type: ignore
 
 from config import config
@@ -48,13 +49,15 @@ def create_app(config_name):
 
     app.logger.debug("---------- starting create_app ----------")
     app.logger.debug(f"Config name is: {config_name}")
-    app.logger.debug(f"DB URI: {os.getenv('DATABASE_URL')}")
+    # app.logger.debug(f"DB URI: {os.getenv('DATABASE_URL')}")
 
     # load config from config.py
     app.config.from_object(config[config_name])
+    app.logger.debug(f"Config settings: {vars(config[config_name])}")
 
     # initialise and connect Flask app to SQLAlchemy
     db.init_app(app) 
+    migrate = Migrate(app, db)
     api = Api(app)
 
     register_blueprints(api)

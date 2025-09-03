@@ -11,7 +11,7 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from flask_migrate import Migrate # type: ignore
+# from flask_migrate import Migrate # type: ignore
 
 from src import create_app
 from api.models import db # type: ignore
@@ -27,7 +27,7 @@ config_name = os.getenv("FLASK_ENV")
 print(f"Config name is: {config_name}")
 app = create_app(config_name)
 
-migrate = Migrate(app, db)
+# migrate = Migrate(app, db)
 
 
 app.logger.info("---------- run.py finished ----------")

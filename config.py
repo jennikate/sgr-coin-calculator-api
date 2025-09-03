@@ -49,7 +49,7 @@ class TestingConfig(BaseConfig):
     Testing configuration settings.
     """
 
-    SQLALCHEMY_DATABASE_URI = "postgresql://testuser:testpassword@localhost/myapp_test"
+    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://testuser:testpassword@localhost:5432/myapp_test"
     TESTING = True
 
 
