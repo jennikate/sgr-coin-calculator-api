@@ -49,9 +49,8 @@ class TestingConfig(BaseConfig):
     Testing configuration settings.
     """
 
+    SQLALCHEMY_DATABASE_URI = "postgresql://testuser:testpassword@localhost/myapp_test"
     TESTING = True
-    # SQLALCHEMY_DATABASE_URI = "postgresql://user:test@localhost/flaskdb"
-    SQLALCHEMY_DATABASE_URI = "postgresql://user:pass@localhost:5432/app_test"
 
 
 config = {

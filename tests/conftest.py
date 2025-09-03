@@ -8,10 +8,8 @@ Test configuration.
 
 import pytest
 
-from src import create_app
-from src.extensions import db as _db
-from sqlalchemy_utils import create_database, drop_database # type: ignore
-from sqlalchemy import create_engine
+from sqlalchemy import text
+from src import create_app, db as _db
 
 
 ###################################################################################################
@@ -20,20 +18,29 @@ from sqlalchemy import create_engine
 
 @pytest.fixture(scope="session")
 def app():
+    """Create and configure a new app instance for tests."""
     app = create_app("testing")
-    yield app
+    with app.app_context():
+        yield app
 
 
 @pytest.fixture(scope="session")
 def db(app):
+    schema_name = "test_schema"
+
+    engine = _db.engine
+    with engine.connect() as conn:
+        conn.execute(text(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE;"))
+        conn.execute(text(f"CREATE SCHEMA {schema_name};"))
+        conn.execute(text(f"SET search_path TO {schema_name};"))
+
+    _db.metadata.schema = schema_name
     with app.app_context():
-        _db.drop_all()
-        _db.create_all()
+        _db.drop_all() # drop old tables to ensure clean state
+        _db.create_all() # create all tables from your models
         yield _db
         _db.drop_all()
-    
 
-@pytest.fixture(scope="function")
-def client(app, db):
-    with app.test_client() as client:
-        yield client
+    with engine.connect() as conn:
+        conn.execute(text(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE;"))
+    
