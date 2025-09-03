@@ -12,22 +12,30 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, current_app, jsonify
+from flask_migrate import Migrate # type: ignore
 from flask_smorest import Api # type: ignore
-from marshmallow import ValidationError # type: ignore
 
+from config import config
 from src.extensions import db
 from .api.v1.rank_routes import blp as RankBlueprint
 
+###################################################################################################
+#  Blueprints, extensions, etc.
+###################################################################################################
+
+def register_blueprints(api):
+    api.register_blueprint(RankBlueprint)
+    
 
 ###################################################################################################
 #  Create App
 ###################################################################################################
 
-def create_app(db_url=None):
+def create_app(config_name):
     app = Flask(__name__)
     load_dotenv()
 
-    # LOG LEVEL config
+    # LOGGING CONFIG
     # Remove default handler
     del app.logger.handlers[:]
 
@@ -39,37 +47,21 @@ def create_app(db_url=None):
     app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
     app.logger.addHandler(log_handler)
 
+    app.logger.debug("---------- starting create_app ----------")
+    app.logger.debug(f"Config name is: {config_name}")
+    # app.logger.debug(f"DB URI: {os.getenv('DATABASE_URL')}")
 
-    ## FLASK Config 
-    # if an exception occurs hidden inside an extension of Flask, propogate it into the main app so we can see it
-    app.config["PROPAGATE_EXCEPTIONS"] = True
-    ## SMOREST Config
-    app.config["API_TITLE"] = "SGR Coin Calculator REST API"
-    app.config["API_VERSION"] = "v1"
-    app.config["OPENAPI_VERSION"] = "3.0.3"
-    app.config["OPENAPI_URL_PREFIX"] = "/"
-    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    # SQLALCHEMY Config
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # load config from config.py
+    app.config.from_object(config[config_name])
+    app.logger.debug(f"Config settings: {vars(config[config_name])}")
 
     # initialise and connect Flask app to SQLAlchemy
     db.init_app(app) 
+    migrate = Migrate(app, db)
     api = Api(app)
 
-    # Handle Marshmallow validation errors
-    @app.errorhandler(ValidationError)
-    def handle_marshmallow_error(err):
-        return jsonify({
-            "message": "Validation error",
-            "errors": err.messages
-        }), 400
-
-    # # Register blueprints for smorest
-    api.register_blueprint(RankBlueprint)
-    
-    app.logger.info("App created")
+    register_blueprints(api)
+    app.logger.info("---------- create_app finished ----------")
 
     return app
 

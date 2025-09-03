@@ -6,11 +6,12 @@ create_app()
 ###################################################################################################
 #  Imports
 ###################################################################################################
+
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 
-from flask_migrate import Migrate # type: ignore
+from dotenv import load_dotenv
+# from flask_migrate import Migrate # type: ignore
 
 from src import create_app
 from api.models import db # type: ignore
@@ -21,12 +22,16 @@ from api.models import db # type: ignore
 # NOTE: create_app is in src/__init__.py, and does the app config, blueprint registration, 
 # db is defined in src/extensions.py
 
+load_dotenv()
 config_name = os.getenv("FLASK_ENV")
+print(f"Config name is: {config_name}")
 app = create_app(config_name)
 
-migrate = Migrate(app, db)
+# migrate = Migrate(app, db)
 
-app.logger.info("App running")
+
+app.logger.info("---------- run.py finished ----------")
+
 
 # adding for when I get to the CORS parts, this is how it was done in our other projects
 # from flask_cors import CORS (add flask_cors to project)
@@ -43,5 +48,5 @@ if __name__ == "__main__":
 
 
 ###################################################################################################
-# End of rile
+# End of file
 ###################################################################################################

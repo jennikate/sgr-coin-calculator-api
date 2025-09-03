@@ -33,14 +33,14 @@ from src import db
 # TODO: consider moving Blueprint config to a separate file
 # TODO: work out where the best place to put the url_prefix is
 
-blp = Blueprint("rank", __name__, url_prefix="/v1/ranks", description="Operations on ranks")
+blp = Blueprint("rank", __name__, url_prefix="/v1", description="Operations on ranks")
 
 
 ###################################################################################################
 #  Classes (flask-smorest resources)
 ###################################################################################################
 
-@blp.route("/")
+@blp.route("/rank")
 class RankResource(MethodView):
     """
     Resources for managing a rank.
@@ -79,18 +79,24 @@ class RankResource(MethodView):
         if "name" in args:
             checked = "name"
             query = query.filter_by(name=args["name"])
-        if "position" in args:
+        elif "position" in args:
             checked = "position"
             query = query.filter_by(position=args["position"])
+        else:
+            abort(400, message="At least one query parameter (name or position) must be provided")
 
         results = query.all()
         if not results:
-            abort(404, message=f"No ranks found for {checked}: {args[checked]}")
+            if checked:
+                abort(404, message=f"No ranks found for {checked}: {args[checked]}")
+            else:
+                abort(404, message="No ranks found")
 
         return results
     
+    
 
-@blp.route("/<rank_id>")
+@blp.route("/rank/<rank_id>")
 class RankByIdResource(MethodView):
     """
     Resources for updating or deleting a rank by id.
@@ -149,6 +155,19 @@ class RankByIdResource(MethodView):
 
         return { "message": f"Rank id {rank_id} deleted" }, 200
 
+
+@blp.route("/ranks")
+class RankResource(MethodView):
+    """
+    Resource for getting all ranks.
+    """
+    @blp.response(200, RankSchema(many=True))
+    def get(self):
+        """
+        Get all ranks
+        """
+        ranks = RankModel.query.all()
+        return ranks
 
 ###################################################################################################
 #  End of File

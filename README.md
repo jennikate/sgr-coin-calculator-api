@@ -15,3 +15,10 @@ The backend and API for the SGR Coin Calculator
 - create a list of .env variables that need to exist 
 - add link to Client repo when ready
 
+
+
+
+- redo dockerfile with uv
+- instead of using testing=true use the config.py config
+- maybe put pytest.ini into pyproject.toml?
+- maybe move test db uri to env var?
