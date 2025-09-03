@@ -7,9 +7,10 @@ create_app()
 #  Imports
 ###################################################################################################
 
+import logging
 import os
 
-from flask import logging
+from dotenv import load_dotenv
 from flask_migrate import Migrate # type: ignore
 
 from src import create_app
@@ -21,13 +22,14 @@ from api.models import db # type: ignore
 # NOTE: create_app is in src/__init__.py, and does the app config, blueprint registration, 
 # db is defined in src/extensions.py
 
+load_dotenv()
 config_name = os.getenv("FLASK_ENV")
 app = create_app(config_name)
 
 migrate = Migrate(app, db)
 
-# LOG LEVEL config
-    # Remove default handler
+# LOGGING CONFIG
+# Remove default handler
 del app.logger.handlers[:]
 
 log_handler = logging.StreamHandler()
@@ -38,6 +40,9 @@ log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s in %(mod
 app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
 app.logger.addHandler(log_handler)
 
+
+app.logger.info("---------- starting run.py ----------")
+app.logger.debug(f"Config name is: {config_name}")
 app.logger.info("App running")
 
 # adding for when I get to the CORS parts, this is how it was done in our other projects
