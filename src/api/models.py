@@ -8,9 +8,9 @@ SQLAlchemy models for the API.
 #  Imports
 ###################################################################################################
 
-from uuid import uuid4
+# from uuid import uuid4
 
-from src import db
+from src.extensions import db
 
 ###################################################################################################
 # Classes

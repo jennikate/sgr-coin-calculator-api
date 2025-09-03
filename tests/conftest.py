@@ -16,13 +16,19 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import inspect
 
 from src import create_app, db as _db
+from src.api.models import RankModel # type: ignore
 
 
 ###################################################################################################
-# Fixtures
+# Configuration & setup
 ###################################################################################################
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MIGRATIONS_DIR = os.path.join(BASE_DIR, "migrations")
+
+@pytest.fixture
+def db():
+    """Expose the SQLAlchemy db object for tests."""
+    return _db
 
 @pytest.fixture(scope="session")
 def app():
@@ -84,3 +90,19 @@ def session(app):
     transaction.rollback()
     connection.close()
     session.remove()
+
+
+###################################################################################################
+# Seeds
+###################################################################################################
+
+@pytest.fixture
+def sample_ranks(db):
+    ranks = [
+        RankModel(name="Captain", position=1, share=1.0),
+        RankModel(name="Lieutenant", position=2, share=1.0),
+        RankModel(name="Blagguard", position=3, share=0.75),
+    ]
+    db.session.add_all(ranks)
+    db.session.commit()
+    return ranks
