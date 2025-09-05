@@ -193,11 +193,153 @@ class TestPostRankAlreadyExists:
             "status": "Unprocessable Entity",
         }
 
+@pytest.mark.usefixtures("sample_ranks")
+class TestGetSpecificRankErrors:
+    """
+        Test that a user cannot get a rank when the query string is invalid
+    """
+    def test_get_rank_by_name_when_does_not_exist(self, client):
+        response = client.get("/v1/rank?name=Sam")
+        
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "message": "No ranks found for name: Sam",
+            "status": "Not Found"
+        }
 
-###################################################################################################
-#  ERROR PATHS : post, get one, update, delete
-###################################################################################################
+    def test_get_rank_by_position_when_does_not_exist(self, client):
+        response = client.get("/v1/rank?position=99")
+        
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "message": "No ranks found for position: 99",
+            "status": "Not Found"
+        }
 
+    def test_get_rank_with_invalid_query_string(self, client):
+        response = client.get("/v1/rank?foo=99")
+        
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "At least one query parameter (name or position) must be provided",
+            "status": "Bad Request"
+        }
+
+    def test_get_rank_with_missing_query_string(self, client):
+        response = client.get("/v1/rank")
+        
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "At least one query parameter (name or position) must be provided",
+            "status": "Bad Request"
+        }
+    
+
+    def test_get_rank_with_invalid_position_type(self, client):
+        response = client.get("/v1/rank?position=samson")
+        
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "query": {
+                    "position": [
+                        "Not a valid integer."
+                    ],
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+    
+
+    def test_get_rank_with_invalid_name_type(self, client):
+        response = client.get("/v1/rank?name=7")
+        
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "message": "No ranks found for name: 7",
+            "status": "Not Found"
+        }
+
+
+@pytest.mark.usefixtures("sample_ranks")
+class TestUpdateRankErrors:
+    """
+        Tests that a user cannot update a rank if they provide invalid details.
+    """
+    def test_update_rank_that_doesnt_exist(self, client):
+        updated_rank = {
+            "name": "Updated Rank",
+            "position": 4,
+            "share": 0.5
+        }
+        response = client.patch(f"/v1/rank/99", json=updated_rank)
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "status": "Not Found"
+        }
+
+    def test_update_rank_with_existing_details(self, client):
+        """
+            Tests that a user cannot update a rank if they provide an existing name/position.
+        """
+        # Check rank exists
+        response = client.get("/v1/rank?name=Captain")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert any(r["name"] == "Captain" and r["position"] == 1 for r in data)
+
+        # Update with the same details
+        new_rank = {
+            "name": "Captain",
+            "position": 1,
+            "share": 1.5
+        }
+        response = client.post("/v1/rank", json=new_rank)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "name": [
+                        f"There is already a rank with name {new_rank["name"]}."
+                    ],
+                    "position": [
+                        f"There is already a rank at position {new_rank["position"]}."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+
+@pytest.mark.usefixtures("sample_ranks")
+class TestDeleteRankErrors:
+    """
+        Tests that a user cannot delete a rank if they provide invalid details.
+    """
+    def test_delete_rank_that_doesnt_exist(self, client):
+        response = client.delete("/v1/rank/99")
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "status": "Not Found"
+        }
+
+    def test_delete_rank_without_id(self, client):
+        response = client.delete("/v1/rank")
+        assert response.status_code == 405
+        assert response.get_json() ==  {
+            "code": 405,
+            "status": "Method Not Allowed"
+        }
 
 
 ###################################################################################################
