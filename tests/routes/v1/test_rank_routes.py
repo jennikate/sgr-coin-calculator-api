@@ -2,12 +2,23 @@
 This module contains a unit test for the rank & ranks endpoint resource in the `src.api.v1/rank_routes` module.
 """
 
+## TODO: refactor tests to remove hardcoded values where possible
+## TODO: refactor tests to use fixtures where possible
+## TODO: review if util functions can be used to reduce code duplication
+
 ###################################################################################################
-#  INITIAL ERRORS : getting all ranks when none exist
+#  IMPORTS
 ###################################################################################################
+
+from flask import current_app
+import pytest
 
 from tests.utils import assert_response_matches_models
 
+
+###################################################################################################
+#  INITIAL ERRORS : getting all ranks when none exist
+###################################################################################################
 
 class TestGetAllRanksWhenNoneExist:
     def test_get_all_ranks_when_none_exist(self, client):
@@ -38,44 +49,15 @@ class TestPostRank:
         result = client.post("/v1/rank", json=new_rank)
 
         assert result.status_code == 201
+        assert result.json["id"] == result.json["id"]  # Check that an id is returned
         assert result.json["name"] == "Test Rank"
         assert result.json["position"] == 1
         assert result.json["share"] == 0.1
 
 
-## These tests need ranks to exist, so we reseed the db before each with sample_ranks
-class TestGetAllRanks:
-    def test_get_all_ranks(self, client, sample_ranks):
-        """
-        Tests that a user can get all ranks from the API.
-        """
-        result = client.get("/v1/ranks")
-
-        assert result.status_code == 200
-        data = result.get_json()
-        assert isinstance(data, list)
-        assert len(data) == len(sample_ranks)
-        assert_response_matches_models(result, sample_ranks) # this ignores ID's by default so we may want to also assert they're returned
-
-        ## Keeping the longhand here as an example for now
-        ## note: id's are returned but we ignore them as they're uuids
-        # assert len(data[0]["id"]) >= 1 for when we move to uuid
-        assert data[0]["id"] >= 1
-        assert data[0]["name"] == "Captain"
-        assert data[0]["position"] == 1
-        assert data[0]["share"] == 1
-        assert data[1]["id"] >= 1
-        assert data[1]["name"] == "Lieutenant"
-        assert data[1]["position"] == 2
-        assert data[1]["share"] == 1
-        assert data[2]["id"] >= 1
-        assert data[2]["name"] == "Blagguard"
-        assert data[2]["position"] == 3
-        assert data[2]["share"] == 0.75
-
-
+@pytest.mark.usefixtures("sample_ranks")
 class TestGetRankByName:
-    def test_get_rank_by_name(self, client, sample_ranks):
+    def test_get_rank_by_name(self, client):
         """
         Test that a user can get a rank by name
         """
@@ -98,9 +80,9 @@ class TestGetRankByName:
         assert data["share"] == 1.0
 
 
-
+@pytest.mark.usefixtures("sample_ranks")
 class TestGetRankByPosition:
-    def test_get_rank_by_position(self, client, sample_ranks):
+    def test_get_rank_by_position(self, client):
         """
         Test that a user can get a rank by name
         """
@@ -121,6 +103,285 @@ class TestGetRankByPosition:
         assert data["name"] == "Lieutenant"
         assert data["position"] == 2
         assert data["share"] == 1.0
+
+
+## TODO: refactor and paramaterise this so that common code is not duplicated, we can pass in what is to be PATCHed
+@pytest.mark.usefixtures("sample_ranks")
+class TestUpdateRank:
+    def test_update_rank(self, client, sample_ranks):
+        """
+        Tests that a user can update a rank in the API.
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+
+        # verify details of the rank before updates
+        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
+        ## then can redo this with that endpoint
+        original_response = client.get("/v1/rank?name=Captain")
+        original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
+        original_expected_response = {
+            "id": original_data["id"],
+            "name": "Captain",
+            "position": 1,
+            "share": 1.0
+        }
+        assert original_data == original_expected_response
+
+        # update the rank
+        updated_rank = {
+            "name": "Updated Rank",
+            "position": 4,
+            "share": 0.5
+        }
+        update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
+        updated_expected_response = {
+            "id": original_data["id"], # id should remain the same
+            "name": "Updated Rank",
+            "position": 4,
+            "share": 0.5
+        }
+        assert update_response.status_code == 200
+        assert update_response.get_json() == updated_expected_response
+
+        # verify Captain is no longer there, but Updated Rank is
+        new_get_response = client.get("/v1/ranks")
+        new_data = new_get_response.get_json()
+
+        assert original_data not in new_data
+        assert updated_expected_response in new_data
+
+
+    def test_update_rank_name_only(self, client, sample_ranks):
+        """
+        Tests that a user can update a rank in the API.
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+
+        # verify details of the rank before updates
+        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
+        ## then can redo this with that endpoint
+        original_response = client.get("/v1/rank?name=Captain")
+        original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
+        original_expected_response = {
+            "id": original_data["id"],
+            "name": "Captain",
+            "position": 1,
+            "share": 1.0
+        }
+        assert original_data == original_expected_response
+
+        # update the rank
+        updated_rank = {
+            "name": "Updated Rank"
+        }
+        update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
+        updated_expected_response = {
+            "id": original_data["id"], # id should remain the same
+            "name": "Updated Rank",
+            "position": original_data["position"], # position should remain the same
+            "share": original_data["share"] # share should remain the same
+        }
+        assert update_response.status_code == 200
+        assert update_response.get_json() == updated_expected_response
+
+        # verify Captain is no longer there, but Updated Rank is
+        new_get_response = client.get("/v1/ranks")
+        new_data = new_get_response.get_json()
+
+        assert original_data not in new_data
+        assert updated_expected_response in new_data
+
+
+    def test_update_rank_position_only(self, client, sample_ranks):
+        """
+        Tests that a user can update a rank in the API.
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+
+        # verify details of the rank before updates
+        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
+        ## then can redo this with that endpoint
+        original_response = client.get("/v1/rank?name=Captain")
+        original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
+        original_expected_response = {
+            "id": original_data["id"],
+            "name": "Captain",
+            "position": 1,
+            "share": 1.0
+        }
+        assert original_data == original_expected_response
+
+        # update the rank
+        updated_rank = {
+            "position": 5
+        }
+        update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
+        updated_expected_response = {
+            "id": original_data["id"], # id should remain the same
+            "name": original_data["name"], # name should remain the same
+            "position": 5, # position should remain the same
+            "share": original_data["share"] # share should remain the same
+        }
+        assert update_response.status_code == 200
+        assert update_response.get_json() == updated_expected_response
+
+        # verify Captain is no longer there, but Updated Rank is
+        new_get_response = client.get("/v1/ranks")
+        new_data = new_get_response.get_json()
+
+        assert original_data not in new_data
+        assert updated_expected_response in new_data
+
+
+    def test_update_rank_share_only(self, client, sample_ranks):
+        """
+        Tests that a user can update a rank in the API.
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+
+        # verify details of the rank before updates
+        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
+        ## then can redo this with that endpoint
+        original_response = client.get("/v1/rank?name=Captain")
+        original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
+        original_expected_response = {
+            "id": original_data["id"],
+            "name": "Captain",
+            "position": 1,
+            "share": 1.0
+        }
+        assert original_data == original_expected_response
+
+        # update the rank
+        updated_rank = {
+            "share": 1.5
+        }
+        update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
+        updated_expected_response = {
+            "id": original_data["id"], # id should remain the same
+            "name": original_data["name"], # name should remain the same
+            "position": original_data["position"], # position should remain the same
+            "share": 1.5 # share should remain the same
+        }
+        assert update_response.status_code == 200
+        assert update_response.get_json() == updated_expected_response
+
+        # verify Captain is no longer there, but Updated Rank is
+        new_get_response = client.get("/v1/ranks")
+        new_data = new_get_response.get_json()
+
+        assert original_data not in new_data
+        assert updated_expected_response in new_data
+
+
+    def test_update_rank_position_and_share_only(self, client, sample_ranks):
+        """
+        Tests that a user can update a rank in the API.
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+
+        # verify details of the rank before updates
+        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
+        ## then can redo this with that endpoint
+        original_response = client.get("/v1/rank?name=Captain")
+        original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
+        original_expected_response = {
+            "id": original_data["id"],
+            "name": "Captain",
+            "position": 1,
+            "share": 1.0
+        }
+        assert original_data == original_expected_response
+
+        # update the rank
+        updated_rank = {
+            "position": 7,
+            "share": 1.5
+        }
+        update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
+        updated_expected_response = {
+            "id": original_data["id"], # id should remain the same
+            "name": original_data["name"], # name should remain the same
+            "position": 7, # position should remain the same
+            "share": 1.5 # share should remain the same
+        }
+        assert update_response.status_code == 200
+        assert update_response.get_json() == updated_expected_response
+
+        # verify Captain is no longer there, but Updated Rank is
+        new_get_response = client.get("/v1/ranks")
+        new_data = new_get_response.get_json()
+
+        assert original_data not in new_data
+        assert updated_expected_response in new_data
+
+    ## TODO: add combo of name/position, name/share once paramaterised
+
+
+@pytest.mark.usefixtures("sample_ranks")
+class TestDeleteRank:
+    def test_delete_rank(self, client, sample_ranks):
+        """
+        Tests that a user can update a rank in the API.
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+
+        # verify details of the rank before updates
+        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
+        ## then can redo this with that endpoint
+        original_response = client.get("/v1/rank?name=Captain")
+        original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
+        original_expected_response = {
+            "id": original_data["id"],
+            "name": "Captain",
+            "position": 1,
+            "share": 1.0
+        }
+        assert original_data == original_expected_response
+
+        # delete the rank
+        delete_response = client.delete(f"/v1/rank/{id}")
+        assert delete_response.status_code == 200
+        current_app.logger.debug(f"DELETE RESPONSE DATA: {delete_response.data}") 
+        assert delete_response.get_json() == {"message": f"Rank id {id} deleted" }
+
+        # verify Captain is no longer there
+        new_get_response = client.get("/v1/ranks")
+        new_data = new_get_response.get_json()
+        assert original_data not in new_data
+
+
+## These tests need ranks to exist, so we reseed the db before each with sample_ranks
+@pytest.mark.usefixtures("sample_ranks")
+class TestGetAllRanks:
+    def test_get_all_ranks(self, client):
+        """
+        Tests that a user can get all ranks from the API.
+        """
+        result = client.get("/v1/ranks")
+
+        assert result.status_code == 200
+        data = result.get_json()
+        assert isinstance(data, list)
+
+        ## Keeping the longhand here as an example for now
+        ## note: id's are returned but we ignore them as they're uuids
+        # assert len(data[0]["id"]) >= 1 for when we move to uuid
+        assert data[0]["id"] >= 1
+        assert data[0]["id"] == data[0]["id"]  # Check that an id is returned
+        assert data[0]["name"] == "Captain"
+        assert data[0]["position"] == 1
+        assert data[0]["share"] == 1
+        assert data[1]["id"] == data[1]["id"] 
+        assert data[1]["id"] >= 1
+        assert data[1]["name"] == "Lieutenant"
+        assert data[1]["position"] == 2
+        assert data[1]["share"] == 1
+        assert data[2]["id"] == data[2]["id"] 
+        assert data[2]["id"] >= 1
+        assert data[2]["name"] == "Blagguard"
+        assert data[2]["position"] == 3
+        assert data[2]["share"] == 0.75
 
 ###################################################################################################
 #  ERROR PATHS : post, get one, update, delete
