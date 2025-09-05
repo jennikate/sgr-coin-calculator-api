@@ -21,10 +21,10 @@ from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 
-from api.models import RankModel
-from api.schemas import MessageSchema, RankQueryArgsSchema, RankSchema
+from src.api.models import RankModel # type: ignore
+from src.api.schemas import MessageSchema, RankQueryArgsSchema, RankSchema
 
-from src import db
+from src.extensions import db
 
 
 ###################################################################################################
@@ -157,7 +157,7 @@ class RankByIdResource(MethodView):
 
 
 @blp.route("/ranks")
-class RankResource(MethodView):
+class AllRanksResource(MethodView):
     """
     Resource for getting all ranks.
     """

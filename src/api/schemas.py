@@ -10,8 +10,8 @@ This defines the Marshmallow schemas for the API.
 from marshmallow import Schema, fields, validates, ValidationError # type: ignore
 from sqlalchemy import select, exists
 
-from .models import RankModel # type: ignore
-from src import db
+from src.api.models import RankModel # type: ignore
+from src.extensions import db
 
 ###################################################################################################
 #  Schemas

@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # from flask_migrate import Migrate # type: ignore
 
 from src import create_app
-from api.models import db # type: ignore
+from src.extensions import db # type: ignore
 
 ###################################################################################################
 #  Body
