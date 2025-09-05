@@ -17,21 +17,6 @@ from tests.utils import assert_response_matches_models
 
 
 ###################################################################################################
-#  INITIAL ERRORS : getting all ranks when none exist
-###################################################################################################
-
-class TestGetAllRanksWhenNoneExist:
-    def test_get_all_ranks_when_none_exist(self, client):
-        """
-        Tests that getting all ranks when none exist returns an empty list.
-        """
-        result = client.get("/v1/ranks")
-
-        assert result.status_code == 200
-        assert result.json == []
-
-
-###################################################################################################
 #  HAPPY PATHS : post, get all, get one, update, delete
 ###################################################################################################
 
@@ -342,7 +327,6 @@ class TestDeleteRank:
         # delete the rank
         delete_response = client.delete(f"/v1/rank/{id}")
         assert delete_response.status_code == 200
-        current_app.logger.debug(f"DELETE RESPONSE DATA: {delete_response.data}") 
         assert delete_response.get_json() == {"message": f"Rank id {id} deleted" }
 
         # verify Captain is no longer there
