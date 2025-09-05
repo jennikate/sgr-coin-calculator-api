@@ -30,10 +30,35 @@ class RankModel(db.Model):
     position = db.Column(db.Integer, unique=True, nullable=False)
     share = db.Column(db.Float(precision=2), nullable=False)
 
+    # optional: back-reference to members so rank.members gives all members for a rank
+    members = db.relationship('Member', back_populates='rank')
+
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, position={self.position}, share={self.share})>"
     
 
+class MemberModel(db.Model):
+    """
+    SQLAlchemy model for a members table.
+
+    :name: The character name to use as a reference - ideally full name.
+    :rank: The character rank, relation from the RankModel.
+    """
+        
+    __tablename__ = 'members'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(160), unique=True, nullable=False)
+
+    # foreign key to ranks table
+    rank_id = db.Column(db.Integer, db.ForeignKey('ranks.id'), nullable=False)
+
+    # relationship for easy access
+    rank = db.relationship('Rank', back_populates='members')
+
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, rank={self.rank})>"
     
 ###################################################################################################
 # End of file
