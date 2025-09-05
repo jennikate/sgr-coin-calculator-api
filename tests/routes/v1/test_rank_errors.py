@@ -13,7 +13,9 @@ This module contains a unit test for the rank & ranks endpoint resource in the `
 from flask import current_app
 import pytest
 
-from tests.utils import assert_response_matches_models
+from sqlalchemy.exc import SQLAlchemyError
+
+from src.extensions import db
 
 
 ###################################################################################################
@@ -78,6 +80,7 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
+
     def test_post_rank_no_share(self, client):
         """
         Tests the correct error shows when posting a rank with no name.
@@ -100,6 +103,7 @@ class TestPostRankErrors:
             },
             "status": "Unprocessable Entity",
         }
+
 
     def test_post_rank_no_fields(self, client):
         """
@@ -126,6 +130,7 @@ class TestPostRankErrors:
             },
             "status": "Unprocessable Entity",
         }
+
 
     def test_post_rank_invalid_types(self, client):
         """
@@ -156,6 +161,41 @@ class TestPostRankErrors:
             },
             "status": "Unprocessable Entity",
         }
+
+    def test_post_rank_sqlalchemy_error(self, client, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        new_rank = {
+            "name": "Captain",
+            "position": 1,
+            "share": 0.1
+        }
+        response = client.post("/v1/rank", json=new_rank)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_post_rank_generic_error(self, client, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        new_rank = {
+            "name": "Captain",
+            "position": 1,
+            "share": 0.1
+        }
+        response = client.post("/v1/rank", json=new_rank)
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
 
 @pytest.mark.usefixtures("sample_ranks")
 class TestPostRankAlreadyExists:
@@ -192,6 +232,7 @@ class TestPostRankAlreadyExists:
             },
             "status": "Unprocessable Entity",
         }
+
 
 @pytest.mark.usefixtures("sample_ranks")
 class TestGetSpecificRankErrors:
@@ -295,11 +336,12 @@ class TestUpdateRankErrors:
             "status": "Not Found"
         }
 
-    def test_update_rank_with_existing_details(self, client):
+    def test_update_rank_with_existing_details(self, client, sample_ranks):
         """
             Tests that a user cannot update a rank if they provide an existing name/position.
         """
         # Check rank exists
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
         response = client.get("/v1/rank?name=Captain")
         assert response.status_code == 200
         data = response.get_json()
@@ -311,7 +353,7 @@ class TestUpdateRankErrors:
             "position": 1,
             "share": 1.5
         }
-        response = client.post("/v1/rank", json=new_rank)
+        response = client.patch(f"/v1/rank/{id}", json=new_rank)
 
         assert response.status_code == 422
         assert response.get_json() ==  {
@@ -328,6 +370,43 @@ class TestUpdateRankErrors:
             },
             "status": "Unprocessable Entity",
         }
+
+
+    def test_update_rank_sqlalchemy_error(self, client, sample_ranks, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+        # create a valid patch payload
+        new_rank = {
+            "name": "NewRank"
+        }
+        response = client.patch(f"/v1/rank/{id}", json=new_rank)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_update_rank_generic_error(self, client, sample_ranks, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+        # create a valid patch payload
+        new_rank = {
+            "name": "NewRank"
+        }
+        response = client.patch(f"/v1/rank/{id}", json=new_rank)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
 
 
 @pytest.mark.usefixtures("sample_ranks")
@@ -350,6 +429,36 @@ class TestDeleteRankErrors:
             "code": 405,
             "status": "Method Not Allowed"
         }
+
+    
+
+    def test_delete_rank_sqlalchemy_error(self, client, sample_ranks, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+        response = client.delete(f"/v1/rank/{id}")
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_delete_rank_generic_error(self, client, sample_ranks, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+        response = client.delete(f"/v1/rank/{id}")
+        
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
 
 
 ###################################################################################################
