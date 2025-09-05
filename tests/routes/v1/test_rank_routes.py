@@ -10,10 +10,11 @@ This module contains a unit test for the rank & ranks endpoint resource in the `
 #  IMPORTS
 ###################################################################################################
 
-from flask import current_app
 import pytest
 
-from tests.utils import assert_response_matches_models
+from flask import current_app
+
+from src.api.models import RankModel # type: ignore
 
 
 ###################################################################################################
@@ -31,13 +32,20 @@ class TestPostRank:
             "position": 1,
             "share": 0.1
         }
-        result = client.post("/v1/rank", json=new_rank)
+        response = client.post("/v1/rank", json=new_rank)
+        data = response.get_json()
 
-        assert result.status_code == 201
-        assert result.json["id"] == result.json["id"]  # Check that an id is returned
-        assert result.json["name"] == "Test Rank"
-        assert result.json["position"] == 1
-        assert result.json["share"] == 0.1
+        assert response.status_code == 201
+        assert data["id"] == data["id"]  # Check that an id is returned
+        assert data["name"] == "Test Rank"
+        assert data["position"] == 1
+        assert data["share"] == 0.1
+
+        # fetch the actual model from the DB
+        rank = RankModel.query.get(data["id"])
+
+        expected_repr = f"<RankModel(id={data["id"]}, name='Test Rank', position=1, share=0.1)>"
+        assert repr(rank) == expected_repr
 
 
 @pytest.mark.usefixtures("sample_ranks")
@@ -46,12 +54,12 @@ class TestGetRankByName:
         """
         Test that a user can get a rank by name
         """
-        result = client.get("/v1/rank?name=Captain")
-        print(f"RESULT {result.json}")
+        response = client.get("/v1/rank?name=Captain")
+        print(f"response {response.json}")
 
-        assert result.status_code == 200
-        assert len(result.get_json()) == 1
-        data = result.get_json()[0] # it should only return one, but it returns it as a dict
+        assert response.status_code == 200
+        assert len(response.get_json()) == 1
+        data = response.get_json()[0] # it should only return one, but it returns it as a dict
         # assert isinstance(data, list)
         assert len(data) == 4 # has 4 elements to it 
 
@@ -71,12 +79,12 @@ class TestGetRankByPosition:
         """
         Test that a user can get a rank by name
         """
-        result = client.get("/v1/rank?position=2")
-        print(f"RESULT {result.json}")
+        response = client.get("/v1/rank?position=2")
+        print(f"response {response.json}")
 
-        assert result.status_code == 200
-        assert len(result.get_json()) == 1
-        data = result.get_json()[0] # it should only return one, but it returns it as a dict
+        assert response.status_code == 200
+        assert len(response.get_json()) == 1
+        data = response.get_json()[0] # it should only return one, but it returns it as a dict
         # assert isinstance(data, list)
         assert len(data) == 4 # has 4 elements to it 
 
@@ -97,10 +105,10 @@ class TestGetRankById:
         Test that a user can get a rank by id
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
-        result = client.get(f"/v1/rank/{id}")
+        response = client.get(f"/v1/rank/{id}")
 
-        assert result.status_code == 200
-        data = result.get_json()
+        assert response.status_code == 200
+        data = response.get_json()
         assert len(data) == 4 # has 4 elements to it 
 
          ## TODO: work out a better way for this
@@ -359,10 +367,10 @@ class TestGetAllRanks:
         """
         Tests that a user can get all ranks from the API.
         """
-        result = client.get("/v1/ranks")
+        response = client.get("/v1/ranks")
 
-        assert result.status_code == 200
-        data = result.get_json()
+        assert response.status_code == 200
+        data = response.get_json()
         assert isinstance(data, list)
 
         ## Keeping the longhand here as an example for now

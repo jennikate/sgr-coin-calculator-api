@@ -162,6 +162,106 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
+    def test_post_rank_empty_name(self, client):
+        """
+        Tests the correct error shows when posting a rank with no name.
+        """
+        new_rank = {
+            "name": "",
+            "position": 1,
+            "share": 0.1
+        }
+        response = client.post("/v1/rank", json=new_rank)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "name": [
+                        "Name must not be empty."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+
+    def test_post_rank_name_too_long(self, client):
+        """
+        Tests the correct error shows when posting a rank with no name.
+        """
+        new_rank = {
+            "name": "name cannot be over twenty characters",
+            "position": 1,
+            "share": 0.1
+        }
+        response = client.post("/v1/rank", json=new_rank)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "name": [
+                        "Name must not exceed 20 characters."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+
+    def test_post_rank_position_negative(self, client):
+        """
+        Tests the correct error shows when posting a rank with no name.
+        """
+        new_rank = {
+            "name": "GoodName",
+            "position": -1,
+            "share": 0.1
+        }
+        response = client.post("/v1/rank", json=new_rank)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "position": [
+                        "Position must be a positive integer."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+
+    def test_post_rank_share_negative(self, client):
+        """
+        Tests the correct error shows when posting a rank with no name.
+        """
+        new_rank = {
+            "name": "GoodName",
+            "position": 1,
+            "share": -0.1
+        }
+        response = client.post("/v1/rank", json=new_rank)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "share": [
+                        "Share must be a non-negative float."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+
     def test_post_rank_sqlalchemy_error(self, client, monkeypatch):
         # Monkeypatch db.session.commit to raise SQLAlchemyError
         def bad_commit():

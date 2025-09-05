@@ -31,7 +31,7 @@ class RankModel(db.Model):
     share = db.Column(db.Float(precision=2), nullable=False)
 
     def __repr__(self):
-        return f"<Rank: {self.name} at position {self.position} with share {self.share}>"
+        return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, position={self.position}, share={self.share})>"
     
 
     
