@@ -218,6 +218,16 @@ class TestGetSpecificRankErrors:
             "status": "Not Found"
         }
 
+    
+    def test_get_rank_by_id_when_does_not_exist(self, client):
+        response = client.get("/v1/rank/99")
+        
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "status": "Not Found"
+        }
+
     def test_get_rank_with_invalid_query_string(self, client):
         response = client.get("/v1/rank?foo=99")
         

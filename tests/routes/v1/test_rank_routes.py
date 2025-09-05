@@ -90,6 +90,29 @@ class TestGetRankByPosition:
         assert data["share"] == 1.0
 
 
+@pytest.mark.usefixtures("sample_ranks")
+class TestGetRankById:
+    def test_get_rank_by_id(self, client, sample_ranks):
+        """
+        Test that a user can get a rank by id
+        """
+        id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
+        result = client.get(f"/v1/rank/{id}")
+
+        assert result.status_code == 200
+        data = result.get_json()
+        assert len(data) == 4 # has 4 elements to it 
+
+         ## TODO: work out a better way for this
+        # so I've an assertion to make sure the required keys are there
+        required_keys = {"id", "name", "position", "share"}
+        assert required_keys.issubset(data.keys())
+        # and one to make sure the values are correct because id is a uuid
+        assert data["name"] == "Captain"
+        assert data["position"] == 1
+        assert data["share"] == 1.0
+
+
 ## TODO: refactor and paramaterise this so that common code is not duplicated, we can pass in what is to be PATCHed
 @pytest.mark.usefixtures("sample_ranks")
 class TestUpdateRank:
@@ -100,8 +123,7 @@ class TestUpdateRank:
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
         # verify details of the rank before updates
-        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
-        ## then can redo this with that endpoint
+        ## TODO: consider using get by id endpoint
         original_response = client.get("/v1/rank?name=Captain")
         original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
         original_expected_response = {
@@ -143,8 +165,7 @@ class TestUpdateRank:
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
         # verify details of the rank before updates
-        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
-        ## then can redo this with that endpoint
+        ## TODO: consider using get by id endpoint
         original_response = client.get("/v1/rank?name=Captain")
         original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
         original_expected_response = {
@@ -184,8 +205,7 @@ class TestUpdateRank:
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
         # verify details of the rank before updates
-        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
-        ## then can redo this with that endpoint
+        ## TODO: consider using get by id endpoint
         original_response = client.get("/v1/rank?name=Captain")
         original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
         original_expected_response = {
@@ -225,8 +245,7 @@ class TestUpdateRank:
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
         # verify details of the rank before updates
-        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
-        ## then can redo this with that endpoint
+        ## TODO: consider using get by id endpoint
         original_response = client.get("/v1/rank?name=Captain")
         original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
         original_expected_response = {
@@ -266,8 +285,7 @@ class TestUpdateRank:
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
         # verify details of the rank before updates
-        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
-        ## then can redo this with that endpoint
+        ## TODO: consider using get by id endpoint
         original_response = client.get("/v1/rank?name=Captain")
         original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
         original_expected_response = {
@@ -312,8 +330,7 @@ class TestDeleteRank:
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
         # verify details of the rank before updates
-        ## TODO: consider a get rank by id endpoint because we probably want one for other reasons too
-        ## then can redo this with that endpoint
+        ## TODO: consider using get by id endpoint
         original_response = client.get("/v1/rank?name=Captain")
         original_data = original_response.get_json()[0] # it should only return one, but it returns it as a dict
         original_expected_response = {
