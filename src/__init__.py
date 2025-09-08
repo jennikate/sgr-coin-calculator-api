@@ -51,11 +51,12 @@ def create_app(config_name):
 
     app.logger.debug("---------- starting create_app ----------")
     app.logger.debug(f"Config name is: {config_name}")
-    # app.logger.debug(f"DB URI: {os.getenv('DATABASE_URL')}")
 
     # load config from config.py
     app.config.from_object(config[config_name])
-    app.logger.debug(f"Config settings: {vars(config[config_name])}")
+    ## commented out as this returns all the config vars, including sensitive ones.
+    ## only use in development and never in production
+    # app.logger.debug(f"Config settings: {vars(config[config_name])}")
 
     # initialise and connect Flask app to SQLAlchemy
     db.init_app(app) 
@@ -64,6 +65,8 @@ def create_app(config_name):
 
     register_blueprints(api)
     app.logger.info("---------- create_app finished ----------")
+    app.logger.info("Swagger UI available at http://localhost:5000/api/swagger-ui")
+    app.logger.info(f"App running in {config_name} mode")
 
     return app
 

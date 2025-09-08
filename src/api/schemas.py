@@ -28,6 +28,8 @@ class RankSchema(Schema):
     position = fields.Int(required=True, metadata={"description": "The position of the rank", "example": 1})
     share = fields.Float(required=True, metadata={"description": "The share of the total pay allocated to this rank", "example": 0.50})
     
+    include_relationships = False   # important! prevent recursive nesting
+
     @validates('name')
     def validate_name(self, value, **kwargs):
         if not value.strip():
@@ -86,7 +88,9 @@ class BaseMemberSchema(Schema):
 class MemberSchema(BaseMemberSchema):
     rank_id = fields.Int(required=True, load_only=True, metadata={"description": "The ID of the rank assigned to the member", "example": 1})
     rank = fields.Nested(RankSchema, dump_only=True)
-    position = fields.Nested(RankSchema, dump_only=True)
+
+    include_fk = True
+    include_relationships = False   # prevent auto-adding rank again
 
     @validates('rank_id')
     def validate_rank_exists(self, value, **kwargs):
