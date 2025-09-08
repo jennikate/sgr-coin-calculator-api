@@ -53,4 +53,4 @@ class TestPostMember:
 
         expected_repr = f"<MemberModel(id={data["id"]}, name='Member Name', rank=<RankModel(id={rank_id}, name='Captain', position=1, share=1.0)>)>"
         assert repr(rank) == expected_repr
-    
+
