@@ -49,7 +49,7 @@ blp = Blueprint("member", __name__, url_prefix="/v1", description="Operations on
 #  Classes (flask-smorest resources)
 ###################################################################################################
 
-@blp.route("/rank")
+@blp.route("/member")
 class MemberResource(MethodView):
     """
     Resources for managing a member.

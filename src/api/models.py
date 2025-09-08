@@ -31,7 +31,7 @@ class RankModel(db.Model):
     share = db.Column(db.Float(precision=2), nullable=False)
 
     # optional: back-reference to members so rank.members gives all members for a rank
-    members = db.relationship('Member', back_populates='rank')
+    members = db.relationship('MemberModel', back_populates='rank')
     # could do cascade='all, delete-orphan which would delete all associated members if a rank is deleted
     # but I don't want to lose the members so this isn't useful here
     # members = db.relationship('Member', back_populates='rank', cascade='all, delete-orphan')
@@ -57,7 +57,7 @@ class MemberModel(db.Model):
     rank_id = db.Column(db.Integer, db.ForeignKey('ranks.id'), nullable=False)
 
     # relationship for easy access
-    rank = db.relationship('Rank', back_populates='members')
+    rank = db.relationship('RankModel', back_populates='members')
 
 
     def __repr__(self):

@@ -18,6 +18,7 @@ from flask_smorest import Api # type: ignore
 from config import config
 from src.extensions import db
 from .api.v1.rank_routes import blp as RankBlueprint
+from .api.v1.member_routes import blp as MemberBlueprint
 
 ###################################################################################################
 #  Blueprints, extensions, etc.
@@ -25,6 +26,7 @@ from .api.v1.rank_routes import blp as RankBlueprint
 
 def register_blueprints(api):
     api.register_blueprint(RankBlueprint)
+    api.register_blueprint(MemberBlueprint)
     
 
 ###################################################################################################
