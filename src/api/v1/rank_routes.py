@@ -4,10 +4,17 @@ This module defines flask-smorest resources for endpoints.
 Endpoints:
  - /rank:
    - POST: Add a new rank
-   - GET: Get all ranks
+   - GET: Get a ranks by name, position, or id
+   - PATCH: Update a rank with parital or full data
+   - DELETE: Delete a rank
+
+- /ranks:
+    - GET: Get all ranks
 
 Classes:
- - RankResource: Resource for adding a rank.
+ - RankResource: Resource for CRUD a rank.
+ - RankByIdResource: Resource for getting a rank by ID.
+ - AllRanksResource: Resource for getting all ranks.
 
 """
 
