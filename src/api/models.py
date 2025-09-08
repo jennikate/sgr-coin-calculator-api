@@ -32,6 +32,9 @@ class RankModel(db.Model):
 
     # optional: back-reference to members so rank.members gives all members for a rank
     members = db.relationship('Member', back_populates='rank')
+    # could do cascade='all, delete-orphan which would delete all associated members if a rank is deleted
+    # but I don't want to lose the members so this isn't useful here
+    # members = db.relationship('Member', back_populates='rank', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, position={self.position}, share={self.share})>"
@@ -48,7 +51,7 @@ class MemberModel(db.Model):
     __tablename__ = 'members'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(160), unique=True, nullable=False)
+    name = db.Column(db.String(256), unique=True, nullable=False)
 
     # foreign key to ranks table
     rank_id = db.Column(db.Integer, db.ForeignKey('ranks.id'), nullable=False)
@@ -60,6 +63,7 @@ class MemberModel(db.Model):
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, rank={self.rank})>"
     
+
 ###################################################################################################
 # End of file
 ###################################################################################################
