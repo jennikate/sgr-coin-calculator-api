@@ -27,6 +27,7 @@ from flask.views import MethodView
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
+from uuid import UUID
 
 from src.api.models import RankModel # type: ignore
 from src.api.schemas import MessageSchema, RankQueryArgsSchema, RankSchema
@@ -113,7 +114,12 @@ class RankByIdResource(MethodView):
         """
         Get rank by id
         """
-        rank = RankModel.query.get_or_404(rank_id)
+        try:
+            data = UUID(rank_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid rank id")
+
+        rank = RankModel.query.get_or_404(data)
         return rank
     
     @blp.arguments(RankSchema(partial=True)) # allow partial updates even though all fields required in schema
@@ -122,7 +128,12 @@ class RankByIdResource(MethodView):
         """
         Update rank partially by id
         """
-        rank = RankModel.query.get_or_404(rank_id)
+        try:
+            data = UUID(rank_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid rank id")
+
+        rank = RankModel.query.get_or_404(data)
 
         if "name" in update_data:
             rank.name = update_data["name"]
@@ -148,7 +159,12 @@ class RankByIdResource(MethodView):
         """
         Delete rank by id
         """
-        rank = RankModel.query.get_or_404(rank_id)
+        try:
+            data = UUID(rank_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid rank id")
+
+        rank = RankModel.query.get_or_404(data)
 
         try:
             db.session.delete(rank)

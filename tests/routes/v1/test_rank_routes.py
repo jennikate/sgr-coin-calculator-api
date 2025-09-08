@@ -376,18 +376,18 @@ class TestGetAllRanks:
         ## Keeping the longhand here as an example for now
         ## note: id's are returned but we ignore them as they're uuids
         # assert len(data[0]["id"]) >= 1 for when we move to uuid
-        assert data[0]["id"] >= 1
+        assert data[0]["id"] is not None
         assert data[0]["id"] == data[0]["id"]  # Check that an id is returned
         assert data[0]["name"] == "Captain"
         assert data[0]["position"] == 1
         assert data[0]["share"] == 1
         assert data[1]["id"] == data[1]["id"] 
-        assert data[1]["id"] >= 1
+        assert data[1]["id"] is not None
         assert data[1]["name"] == "Lieutenant"
         assert data[1]["position"] == 2
         assert data[1]["share"] == 1
         assert data[2]["id"] == data[2]["id"] 
-        assert data[2]["id"] >= 1
+        assert data[2]["id"] is not None
         assert data[2]["name"] == "Blagguard"
         assert data[2]["position"] == 3
         assert data[2]["share"] == 0.75

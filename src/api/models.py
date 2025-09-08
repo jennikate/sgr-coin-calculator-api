@@ -8,9 +8,8 @@ SQLAlchemy models for the API.
 #  Imports
 ###################################################################################################
 
-import uuid
-
-from sqlalchemy.dialects.postgresql import UUID # type: ignore
+from uuid import uuid4
+from sqlalchemy.dialects.postgresql import UUID as pgUUID # type: ignore
 
 from src.extensions import db
 
@@ -28,9 +27,9 @@ class RankModel(db.Model):
     __tablename__ = 'ranks'
 
     id = db.Column(
-        UUID(as_uuid=True),
+        pgUUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4,
+        default=uuid4,
         unique=True,
         nullable=False
     )
@@ -59,9 +58,9 @@ class MemberModel(db.Model):
     __tablename__ = 'members'
 
     id = db.Column(
-        UUID(as_uuid=True),
+        pgUUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4,
+        default=uuid4,
         unique=True,
         nullable=False
     )

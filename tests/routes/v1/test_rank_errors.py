@@ -363,10 +363,11 @@ class TestGetSpecificRankErrors:
     def test_get_rank_by_id_when_does_not_exist(self, client):
         response = client.get("/v1/rank/99")
         
-        assert response.status_code == 404
+        assert response.status_code == 400
         assert response.get_json() ==  {
-            "code": 404,
-            "status": "Not Found"
+            "code": 400,
+            "message": "Invalid rank id",
+            "status": "Bad Request"
         }
 
     def test_get_rank_with_invalid_query_string(self, client):
@@ -430,10 +431,11 @@ class TestUpdateRankErrors:
             "share": 0.5
         }
         response = client.patch(f"/v1/rank/99", json=updated_rank)
-        assert response.status_code == 404
+        assert response.status_code == 400
         assert response.get_json() ==  {
-            "code": 404,
-            "status": "Not Found"
+            "code": 400,
+            "message": "Invalid rank id",
+            "status": "Bad Request"
         }
 
     def test_update_rank_with_existing_details(self, client, sample_ranks):
@@ -516,10 +518,11 @@ class TestDeleteRankErrors:
     """
     def test_delete_rank_that_doesnt_exist(self, client):
         response = client.delete("/v1/rank/99")
-        assert response.status_code == 404
+        assert response.status_code == 400
         assert response.get_json() ==  {
-            "code": 404,
-            "status": "Not Found"
+            "code": 400,
+            "message": "Invalid rank id",
+            "status": "Bad Request"
         }
 
     def test_delete_rank_without_id(self, client):
