@@ -69,6 +69,7 @@ class RankQueryArgsSchema(Schema):
 class BaseMemberSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True, metadata={"description": "The character name", "example": "John Doe"})
+    status = fields.Bool(required=True, metadata={"description": "The member's status", "example": True})
     
     @validates('name')
     def validate_name(self, value, **kwargs):
