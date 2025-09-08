@@ -6,7 +6,9 @@ Test configuration.
 # Imports
 ###################################################################################################
 
+import logging
 import os
+import sys
 import pytest
 
 from alembic import command
