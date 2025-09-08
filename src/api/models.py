@@ -8,7 +8,9 @@ SQLAlchemy models for the API.
 #  Imports
 ###################################################################################################
 
-# from uuid import uuid4
+import uuid
+
+from sqlalchemy.dialects.postgresql import UUID # type: ignore
 
 from src.extensions import db
 
@@ -25,7 +27,13 @@ class RankModel(db.Model):
     """
     __tablename__ = 'ranks'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False
+    )
     name = db.Column(db.String(20), unique=True, nullable=False)
     position = db.Column(db.Integer, unique=True, nullable=False)
     share = db.Column(db.Float(precision=2), nullable=False)
@@ -50,11 +58,17 @@ class MemberModel(db.Model):
         
     __tablename__ = 'members'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False
+    )
     name = db.Column(db.String(256), unique=True, nullable=False)
 
     # foreign key to ranks table
-    rank_id = db.Column(db.Integer, db.ForeignKey('ranks.id'), nullable=False)
+    rank_id = db.Column(db.UUID, db.ForeignKey('ranks.id'), nullable=False)
 
     # relationship for easy access
     rank = db.relationship('RankModel', back_populates='members')

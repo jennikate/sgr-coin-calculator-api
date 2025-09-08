@@ -15,3 +15,4 @@ The backend and API for the SGR Coin Calculator
 - create a list of .env variables that need to exist 
 - add link to Client repo when ready
 - add note that swagger is on `http://localhost:5000/api/swagger-ui`
+- add note about cleardowndb script
