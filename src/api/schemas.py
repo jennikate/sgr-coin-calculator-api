@@ -23,7 +23,7 @@ class MessageSchema(Schema):
 
 ## RANKS
 class RankSchema(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.UUID(dump_only=True)
     name = fields.Str(required=True, metadata={"description": "The name of the rank", "example": "Private"})
     position = fields.Int(required=True, metadata={"description": "The position of the rank", "example": 1})
     share = fields.Float(required=True, metadata={"description": "The share of the total pay allocated to this rank", "example": 0.50})
@@ -67,7 +67,7 @@ class RankQueryArgsSchema(Schema):
 
 ## MEMBERS
 class BaseMemberSchema(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.UUID(dump_only=True)
     name = fields.Str(required=True, metadata={"description": "The character name", "example": "John Doe"})
     
     @validates('name')
@@ -86,7 +86,7 @@ class BaseMemberSchema(Schema):
 
 
 class MemberSchema(BaseMemberSchema):
-    rank_id = fields.Int(required=True, load_only=True, metadata={"description": "The ID of the rank assigned to the member", "example": 1})
+    rank_id = fields.UUID(required=True, load_only=True, metadata={"description": "The ID of the rank assigned to the member", "example": 1})
     rank = fields.Nested(RankSchema, dump_only=True)
 
     include_fk = True
