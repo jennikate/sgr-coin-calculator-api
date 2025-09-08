@@ -65,6 +65,7 @@ class MemberModel(db.Model):
         nullable=False
     )
     name = db.Column(db.String(256), unique=True, nullable=False)
+    status = db.Column(db.Boolean, default=True, nullable=False) # active/inactive status
 
     # foreign key to ranks table
     rank_id = db.Column(db.UUID, db.ForeignKey('ranks.id'), nullable=False)

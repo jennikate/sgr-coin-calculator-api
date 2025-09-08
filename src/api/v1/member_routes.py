@@ -75,6 +75,19 @@ class MemberResource(MethodView):
         return member
     
 
+@blp.route("/members")
+class AllMemberssResource(MethodView):
+    """
+    Resource for getting all ranks.
+    """
+    @blp.response(200, MemberSchema(many=True))
+    def get(self):
+        """
+        Get all ranks
+        """
+        ranks = MemberModel.query.all()
+        return ranks
+
 ###################################################################################################
 #  End of File
 ###################################################################################################
