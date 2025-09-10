@@ -266,3 +266,31 @@ class TestDeleteMemberErrors:
             "code": 405,
             "status": "Method Not Allowed"
         }
+
+    def test_delete_member_sqlalchemy_error(self, client, sample_members, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_members[0].id 
+        response = client.delete(f"/v1/member/{id}")
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_delete_member_generic_error(self, client, sample_members, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_members[0].id 
+        response = client.delete(f"/v1/member/{id}")
+        
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
