@@ -37,9 +37,9 @@ class TestPostRank:
 
         assert response.status_code == 201
         assert data["id"] == data["id"]  # Check that an id is returned
-        assert data["name"] == "Test Rank"
-        assert data["position"] == 1
-        assert data["share"] == 0.1
+        assert data["name"] == new_rank["name"]
+        assert data["position"] == new_rank["position"]
+        assert data["share"] == new_rank["share"]
 
         # fetch the actual model from the DB
         rank = RankModel.query.get(data["id"])
@@ -165,7 +165,6 @@ class TestUpdateRank:
         assert original_data not in new_data
         assert updated_expected_response in new_data
 
-
     def test_update_rank_name_only(self, client, sample_ranks):
         """
         Tests that a user can update a rank in the API.
@@ -204,7 +203,6 @@ class TestUpdateRank:
 
         assert original_data not in new_data
         assert updated_expected_response in new_data
-
 
     def test_update_rank_position_only(self, client, sample_ranks):
         """
@@ -245,7 +243,6 @@ class TestUpdateRank:
         assert original_data not in new_data
         assert updated_expected_response in new_data
 
-
     def test_update_rank_share_only(self, client, sample_ranks):
         """
         Tests that a user can update a rank in the API.
@@ -284,7 +281,6 @@ class TestUpdateRank:
 
         assert original_data not in new_data
         assert updated_expected_response in new_data
-
 
     def test_update_rank_position_and_share_only(self, client, sample_ranks):
         """

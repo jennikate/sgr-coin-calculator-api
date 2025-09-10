@@ -20,7 +20,7 @@ from src.extensions import db
 
 # This needs a rank to exist for the member to be posted against
 @pytest.mark.usefixtures("sample_ranks")
-class TestPostMember:
+class TestPostMemberErrors:
     def test_post_member_no_payload(self, client, sample_ranks):
         """
         Tests that a 422 response is returned if the POST has no payload.
@@ -208,3 +208,43 @@ class TestPostMember:
         assert response.status_code == 500
         data = response.get_json()
         assert "Something went wrong!" in data["message"] 
+
+class TestGetAllMembersErrors:
+    def test_get_all_members_when_none_exist(self, client):
+        """
+        Tests that getting all members when none exist returns an empty list.
+        """
+        result = client.get("/v1/members")
+
+        assert result.status_code == 200
+        assert result.json == []
+
+# class TestGetMemberErrors:
+#     def test_get_member_with_invalid_id(self, client, sample_members):
+#         """
+#         Tests that a 422 response is returned if the GET has an invalid member id.
+#         """
+#         response = client.get("/v1/member/abc")
+
+#         assert response.status_code == 422
+#         assert response.get_json() ==  {
+#             "code": 422,
+#             "errors": {
+#                 "member_id": [
+#                     "Not a valid UUID."
+#                 ]
+#             },
+#             "status": "Unprocessable Entity",
+#         }
+
+#     def test_get_member_when_id_doesnt_exist(self, client, sample_members):
+#         """
+#         Tests that a 404 response is returned if the GET has a member id that doesn't exist.
+#         """
+#         response = client.get(f"/v1/member/{uuid4()}")
+#         assert response.status_code == 404
+#         assert response.get_json() ==  {
+#             "code": 404,
+#             "message": "Member not found",
+#             "status": "Not Found"
+#         }

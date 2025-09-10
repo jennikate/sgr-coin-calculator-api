@@ -355,8 +355,7 @@ class TestGetSpecificRankErrors:
             "message": "No ranks found for position: 99",
             "status": "Not Found"
         }
-
-    
+  
     def test_get_rank_by_id_when_does_not_exist(self, client):
         response = client.get("/v1/rank/99")
         
@@ -387,7 +386,6 @@ class TestGetSpecificRankErrors:
             "status": "Bad Request"
         }
     
-
     def test_get_rank_with_invalid_position_type(self, client):
         response = client.get("/v1/rank?position=samson")
         
@@ -404,7 +402,6 @@ class TestGetSpecificRankErrors:
             "status": "Unprocessable Entity",
         }
     
-
     def test_get_rank_with_invalid_name_type(self, client):
         response = client.get("/v1/rank?name=7")
         
