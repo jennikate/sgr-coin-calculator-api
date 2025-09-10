@@ -29,6 +29,7 @@ from flask.views import MethodView
 from marshmallow import ValidationError
 from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
+from sqlalchemy.orm import joinedload
 from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
 
@@ -93,6 +94,39 @@ class MemberByIdResource(MethodView):
             abort(400, message="Invalid member id")
 
         member = MemberModel.query.get_or_404(data)
+        return member
+        
+
+    @blp.arguments(MemberSchema(partial=True)) # allow partial updates even though all fields required in schema
+    @blp.response(200, MemberSchema)
+    def patch(self, update_data, member_id):
+        """
+        Update member partially by id
+        """
+        try:
+            data = UUID(member_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid member id")
+
+        member = MemberModel.query.get_or_404(data)
+
+        if "name" in update_data:
+            member.name = update_data["name"]
+        if "rank_id" in update_data:
+            member.rank_id = update_data["rank_id"]
+        if "status" in update_data:
+            member.status = update_data["status"]
+
+        try:
+            db.session.add(member)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message=str(e))
+        
         return member
     
 
