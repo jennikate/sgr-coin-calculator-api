@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the member & members endpoint resource in the `src.api.v1/member_routes` module.
+Tests for the member & members endpoint resource, located in the `src.api.v1/member_routes` module.
 """
 
 ###################################################################################################

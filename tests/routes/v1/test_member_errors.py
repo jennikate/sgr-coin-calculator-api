@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the member & members endpoint resource in the `src.api.v1/member_routes` module.
+Tests for error scenarios for the member & members endpoint resource, located in the `src.api.v1/member_routes` module.
 """
 
 ###################################################################################################
@@ -23,7 +23,7 @@ from src.extensions import db
 class TestPostMember:
     def test_post_member_no_payload(self, client, sample_ranks):
         """
-        Tests that a user can post a new member to the API.
+        Tests that a 422 response is returned if the POST has no payload.
         """
         rank_id = str(sample_ranks[0].id) # Get the id of the first sample rank & make it a string so we can pass it to the POST
         new_member = {}
@@ -48,7 +48,7 @@ class TestPostMember:
 
     def test_post_member_invalid_fields(self, client, sample_ranks):
         """
-        Tests that a user can post a new member to the API.
+        Tests that a 422 response is returned if the POST has invalid fields.
         """
         rank_id = str(sample_ranks[0].id) # Get the id of the first sample rank & make it a string so we can pass it to the POST
         new_member = {
@@ -75,7 +75,7 @@ class TestPostMember:
 
     def test_post_member_name_too_long(self, client, sample_ranks):
         """
-        Tests that a user can post a new member to the API.
+        Tests that a 422 response is returned if the POST has a member name that is too long.
         """
         rank_id = str(sample_ranks[0].id) # Get the id of the first sample rank & make it a string so we can pass it to the POST
         new_member = {
@@ -99,7 +99,7 @@ class TestPostMember:
 
     def test_post_member_name_empty(self, client, sample_ranks):
         """
-        Tests that a user can post a new member to the API.
+        Tests that a 422 response is returned if the POST has an empty member name.
         """
         rank_id = str(sample_ranks[0].id) # Get the id of the first sample rank & make it a string so we can pass it to the POST
         new_member = {
@@ -123,7 +123,7 @@ class TestPostMember:
 
     def test_post_member_rank_doesnt_exist(self, client, sample_ranks):
         """
-        Tests that a user can post a new member to the API.
+        Tests that a 422 response is returned if the POST has a rank that doesn't exist.
         """
         new_member = {
             "name": "Sample Name",
@@ -146,7 +146,7 @@ class TestPostMember:
 
     def test_post_member_name_exists(self, client, sample_ranks, sample_members):
         """
-        Tests that a user can post a new member to the API.
+        Tests that a 422 response is returned if the POST has a member name that already exists.
         """
         # create a new member with the same name as an existing member
         new_member = {
@@ -170,6 +170,9 @@ class TestPostMember:
         }
 
     def test_post_member_sqlalchemy_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the POST raises a SQLAlchemyError.
+        """
         # Monkeypatch db.session.commit to raise SQLAlchemyError
         def bad_commit():
             raise SQLAlchemyError("DB error")
@@ -188,6 +191,9 @@ class TestPostMember:
         assert "An error occurred when inserting to db" in data["message"]
 
     def test_post_member_generic_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the POST raises any other error.
+        """
         def bad_commit():
             raise RuntimeError("Something went wrong!")
 
