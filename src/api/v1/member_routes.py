@@ -27,10 +27,12 @@ Classes:
 from flask import current_app
 from flask.views import MethodView
 from marshmallow import ValidationError
+from sqlalchemy import asc
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
+from uuid import UUID
 
-from src.api.models import MemberModel # type: ignore
+from src.api.models import MemberModel, RankModel # type: ignore
 from src.api.schemas import MemberSchema, MessageSchema
 
 from src.extensions import db
@@ -73,20 +75,48 @@ class MemberResource(MethodView):
             abort(500, message=str(e))
 
         return member
-    
+
+
+@blp.route("/member/<member_id>")
+class MemberByIdResource(MethodView):
+    """
+    Resources for updating or deleting a member by id.
+    """
+    @blp.response(200, MemberSchema)
+    def get(self, member_id):
+        """
+        Get member by id
+        """
+        try:
+            data = UUID(member_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid member id")
+
+        member = MemberModel.query.get_or_404(data)
+        return member
+
 
 @blp.route("/members")
 class AllMemberssResource(MethodView):
     """
-    Resource for getting all ranks.
+    Resource for getting all members.
     """
     @blp.response(200, MemberSchema(many=True))
     def get(self):
         """
-        Get all ranks
+        Get all members
         """
-        ranks = MemberModel.query.all()
-        return ranks
+        members = (
+            MemberModel.query
+            .join(MemberModel.rank)  # join so we can sort on rank
+            .order_by(
+                asc(RankModel.position),   # first by rank position
+                asc(MemberModel.name)      # then by member name
+            )
+            .all()
+        )
+
+        return members
 
 ###################################################################################################
 #  End of File

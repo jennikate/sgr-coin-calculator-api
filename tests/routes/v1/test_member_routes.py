@@ -46,7 +46,7 @@ class TestPostMember:
         }
 
         assert response.status_code == 201
-        assert response.get_json() == expected_response
+        assert data == expected_response
 
         # fetch the actual model from the DB
         rank = MemberModel.query.get(data["id"])
@@ -58,10 +58,9 @@ class TestPostMember:
 class TestGetMembers:
     def test_get_all_members(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can get all members.
+        Tests that a user can get all members, sorted by rank then name.
         """
         response = client.get("/v1/members")
-        data = response.get_json()
 
         # test the response matches the sample fixtures
         # TODO: can probably loop over this instead of writing it all out
@@ -92,10 +91,10 @@ class TestGetMembers:
                 "id": str(sample_members[2].id),
                 "name": str(sample_members[2].name),
                 "rank": {
-                    "id": str(sample_ranks[1].id),
-                    "name": str(sample_ranks[1].name),
-                    "position": int(sample_ranks[1].position),
-                    "share": float(sample_ranks[1].share)
+                    "id": str(sample_ranks[2].id),
+                    "name": str(sample_ranks[2].name),
+                    "position": int(sample_ranks[2].position),
+                    "share": float(sample_ranks[2].share)
                 },
                 "status": bool(sample_members[2].status)
             },
@@ -104,25 +103,91 @@ class TestGetMembers:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
-    # def test_get_member_by_id(self, client, sample_members, sample_ranks):
-    #     """
-    #     Tests that a user can get a member by id.
-    #     """
-    #     member_id = str(sample_members[0].id)
-    #     response = client.get(f"/v1/member/{member_id}")
-    #     data = response.get_json()  
+    def test_get_all_members_sort_order(self, client, sample_members, sample_ranks):
+        """
+        Tests that a user can get all members, sorted by rank then name.
+        """
+        # add another member that would break the original sort order if not sorted correctly
+        new_member = {
+            "name": "A Member Name",
+            "rank_id": str(sample_ranks[1].id) ,
+        }
+        
+        post_response = client.post("/v1/member", json=new_member)
 
-    #     expected_response = {
-    #         "id": member_id,
-    #         "name": str(sample_members[0].name),
-    #         "rank": {
-    #             "id": str(sample_ranks[0].id),
-    #             "name": str(sample_ranks[0].name),
-    #             "position": int(sample_ranks[0].position),
-    #             "share": float(sample_ranks[0].share)
-    #         },
-    #         "status": bool(sample_members[0].status)
-    #     }
-    #     assert response.status_code == 200
-    #     assert response.get_json() == expected_response
+        # Get all members
+        response = client.get("/v1/members")
+        # TODO: can probably loop over this instead of writing it all out
+
+        expected_response = [
+            {
+                "id": str(sample_members[0].id),
+                "name": str(sample_members[0].name),
+                "rank": {
+                    "id": str(sample_ranks[0].id),
+                    "name": str(sample_ranks[0].name),
+                    "position": int(sample_ranks[0].position),
+                    "share": float(sample_ranks[0].share)
+                },
+                "status": bool(sample_members[0].status)
+            },
+            {
+                "id": post_response.get_json()["id"],
+                "name": "A Member Name",
+                "rank": {
+                    "id": str(sample_ranks[1].id),
+                    "name": str(sample_ranks[1].name),
+                    "position": int(sample_ranks[1].position),
+                    "share": float(sample_ranks[1].share)
+                },
+                "status": bool(sample_members[1].status)
+            },
+            {
+                "id": str(sample_members[1].id),
+                "name": str(sample_members[1].name),
+                "rank": {
+                    "id": str(sample_ranks[1].id),
+                    "name": str(sample_ranks[1].name),
+                    "position": int(sample_ranks[1].position),
+                    "share": float(sample_ranks[1].share)
+                },
+                "status": bool(sample_members[1].status)
+            },
+            {
+                "id": str(sample_members[2].id),
+                "name": str(sample_members[2].name),
+                "rank": {
+                    "id": str(sample_ranks[2].id),
+                    "name": str(sample_ranks[2].name),
+                    "position": int(sample_ranks[2].position),
+                    "share": float(sample_ranks[2].share)
+                },
+                "status": bool(sample_members[2].status)
+            },
+        ]
+
+        assert response.status_code == 200
+        assert response.get_json() == expected_response
+
+    def test_get_member_by_id(self, client, sample_members, sample_ranks):
+        """
+        Tests that a user can get a member by id.
+        """
+        member_id = str(sample_members[0].id)
+        response = client.get(f"/v1/member/{member_id}")
+        data = response.get_json()  
+
+        expected_response = {
+            "id": member_id,
+            "name": str(sample_members[0].name),
+            "rank": {
+                "id": str(sample_ranks[0].id),
+                "name": str(sample_ranks[0].name),
+                "position": int(sample_ranks[0].position),
+                "share": float(sample_ranks[0].share)
+            },
+            "status": bool(sample_members[0].status)
+        }
+        assert response.status_code == 200
+        assert response.get_json() == expected_response
 

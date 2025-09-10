@@ -219,32 +219,27 @@ class TestGetAllMembersErrors:
         assert result.status_code == 200
         assert result.json == []
 
-# class TestGetMemberErrors:
-#     def test_get_member_with_invalid_id(self, client, sample_members):
-#         """
-#         Tests that a 422 response is returned if the GET has an invalid member id.
-#         """
-#         response = client.get("/v1/member/abc")
+class TestGetMemberErrors:
+    def test_get_member_with_invalid_id(self, client, sample_members):
+        """
+        Tests that a 422 response is returned if the GET has an invalid member id.
+        """
+        response = client.get("/v1/member/abc")
 
-#         assert response.status_code == 422
-#         assert response.get_json() ==  {
-#             "code": 422,
-#             "errors": {
-#                 "member_id": [
-#                     "Not a valid UUID."
-#                 ]
-#             },
-#             "status": "Unprocessable Entity",
-#         }
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid member id",
+            "status": "Bad Request"
+        }
 
-#     def test_get_member_when_id_doesnt_exist(self, client, sample_members):
-#         """
-#         Tests that a 404 response is returned if the GET has a member id that doesn't exist.
-#         """
-#         response = client.get(f"/v1/member/{uuid4()}")
-#         assert response.status_code == 404
-#         assert response.get_json() ==  {
-#             "code": 404,
-#             "message": "Member not found",
-#             "status": "Not Found"
-#         }
+    def test_get_member_when_id_doesnt_exist(self, client, sample_members):
+        """
+        Tests that a 404 response is returned if the GET has a member id that doesn't exist.
+        """
+        response = client.get(f"/v1/member/{uuid4()}")
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "status": "Not Found"
+        }

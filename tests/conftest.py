@@ -113,9 +113,9 @@ def sample_ranks(db):
 def sample_members(db, sample_ranks):
     from src.api.models import MemberModel # type: ignore
     members = [
-        MemberModel(name="Alice", rank_id=sample_ranks[0].id),
-        MemberModel(name="Bob", rank_id=sample_ranks[1].id),
+        MemberModel(name="Bob", rank_id=sample_ranks[0].id),
         MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
+        MemberModel(name="Alice", rank_id=sample_ranks[2].id),
     ]
     db.session.add_all(members)
     db.session.commit()
