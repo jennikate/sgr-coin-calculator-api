@@ -246,89 +246,86 @@ class TestGetMemberErrors:
             "status": "Not Found"
         }
 
-# @pytest.mark.usefixtures("sample_members", "sample_ranks")
-# class TestUpdateMemberErrors:
-#     """
-#         Tests that a user cannot update a member if they provide invalid details.
-#     """
-#     def test_update_member_that_doesnt_exist(self, client, sample_ranks):
-#         rank_id = str(sample_ranks[0].id) # Get the id of the first sample rank & make it a string so we can pass it to the POST
-#         updated_member = {
-#             "name": "Member Name",
-#             "rank_id": rank_id,
-#         }
-#         response = client.patch(f"/v1/rank/99", json=updated_member)
-#         assert response.status_code == 400
-#         assert response.get_json() ==  {
-#             "code": 400,
-#             "message": "Invalid member id",
-#             "status": "Bad Request"
-#         }
+@pytest.mark.usefixtures("sample_members", "sample_ranks")
+class TestUpdateMemberErrors:
+    """
+        Tests that a user cannot update a member if they provide invalid details.
+    """
+    def test_update_member_that_doesnt_exist(self, client, sample_members, sample_ranks):
+        updated_member = {
+            "name": "Member Name",
+            "rank_id": str(sample_ranks[2].id),
+        }
+        response = client.patch(f"/v1/member/99", json=updated_member)
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid member id",
+            "status": "Bad Request"
+        }
 
-#     def test_update_member_with_existing_details(self, client, sample_members):
-#         """
-#             Tests that a user cannot update a member if they provide an existing name.
-#         """
-#         # Get an existing member & store their name
-#         existing_member_name = str(sample_members[0].name)
-#         # Get the id of a different existing member to update
-#         id = sample_members[1].id
+    def test_update_member_with_existing_details(self, client, sample_members):
+        """
+            Tests that a user cannot update a member if they provide an existing name.
+        """
+        member_name = sample_members[0].name # Get the name of an existing member
+        other_member_id = sample_members[1].id # Get the id of a different existing member to update    
 
-#         # Update with the same details
-#         updated_member = {
-#             "name": existing_member_name
-#         }
-#         response = client.patch(f"/v1/rank/{id}", json=updated_member)
+        patch_data = {
+            "name": member_name
+        }
 
-#         assert response.status_code == 422
-#         assert response.get_json() ==  {
-#             "code": 422,
-#             "errors": {
-#                 "json": {
-#                     "name": [
-#                         f"There is already a member with name {updated_member["name"]}."
-#                     ]
-#                 }
-#             },
-#             "status": "Unprocessable Entity",
-#         }
+        response = client.patch(f"/v1/member/{other_member_id}", json=patch_data)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "name": [
+                        f"There is already a member with name {member_name}."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
 
 
-#     def test_update_member_sqlalchemy_error(self, client, sample_members, monkeypatch):
-#         # Monkeypatch db.session.commit to raise SQLAlchemyError
-#         def bad_commit():
-#             raise SQLAlchemyError("DB error")
+    def test_update_member_sqlalchemy_error(self, client, sample_members, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
 
-#         monkeypatch.setattr(db.session, "commit", bad_commit)
+        monkeypatch.setattr(db.session, "commit", bad_commit)
 
-#         id = sample_members[0].id # Get the id of the first sample member (Captain)
-#         # create a valid patch payload
-#         new_member = {
-#             "name": "New Member"
-#         }
-#         response = client.patch(f"/v1/member/{id}", json=new_member)
+        id = sample_members[0].id # Get the id of the first sample member (Captain)
+        # create a valid patch payload
+        new_member = {
+            "name": "New Member"
+        }
+        response = client.patch(f"/v1/member/{id}", json=new_member)
 
-#         assert response.status_code == 500
-#         data = response.get_json()
-#         assert "An error occurred when inserting to db" in data["message"]
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
 
     
-#     def test_update_member_generic_error(self, client, sample_members, monkeypatch):
-#         def bad_commit():
-#             raise RuntimeError("Something went wrong!")
+    def test_update_member_generic_error(self, client, sample_members, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
 
-#         monkeypatch.setattr(db.session, "commit", bad_commit)
+        monkeypatch.setattr(db.session, "commit", bad_commit)
 
-#         id = sample_members[0].id # Get the id of the first sample member (Captain)
-#         # create a valid patch payload
-#         new_member = {
-#             "name": "New Member"
-#         }
-#         response = client.patch(f"/v1/member/{id}", json=new_member)
+        id = sample_members[0].id # Get the id of the first sample member (Captain)
+        # create a valid patch payload
+        new_member = {
+            "name": "New Member"
+        }
+        response = client.patch(f"/v1/member/{id}", json=new_member)
 
-#         assert response.status_code == 500
-#         data = response.get_json()
-#         assert "Something went wrong!" in data["message"] 
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
 
 
 @pytest.mark.usefixtures("sample_members")
