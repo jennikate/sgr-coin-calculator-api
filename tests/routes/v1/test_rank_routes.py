@@ -145,14 +145,14 @@ class TestUpdateRank:
         # update the rank
         updated_rank = {
             "name": "Updated Rank",
-            "position": 4,
+            "position": len(sample_ranks) + 1,
             "share": 0.5
         }
         update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
         updated_expected_response = {
             "id": original_data["id"], # id should remain the same
             "name": "Updated Rank",
-            "position": 4,
+            "position": len(sample_ranks) + 1,
             "share": 0.5
         }
         assert update_response.status_code == 200
@@ -388,6 +388,12 @@ class TestGetAllRanks:
                 "name": sample_ranks[2].name,
                 "position": sample_ranks[2].position,
                 "share": sample_ranks[2].share 
+            },
+            {
+                "id": data[3]["id"],
+                "name": sample_ranks[3].name,
+                "position": sample_ranks[3].position,
+                "share": sample_ranks[3].share 
             }
         ]
         assert data == expected_response

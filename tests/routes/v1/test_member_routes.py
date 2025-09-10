@@ -150,6 +150,17 @@ class TestGetMembers:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
+
+    def test_get_all_members_by_rank_no_members(self, client, sample_members, sample_ranks):
+        """
+        Tests that a user can get all members for a specific rank.
+        """
+        response = client.get("/v1/members?rank=" + str(sample_ranks[len(sample_ranks) -1].id))
+        expected_response = [] # empty list
+
+        assert response.status_code == 200
+        assert response.get_json() == expected_response
+
     def test_get_all_members_sort_order(self, client, sample_members, sample_ranks):
         """
         Tests that a user can get all members, sorted by rank then name.

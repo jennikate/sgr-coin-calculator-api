@@ -104,6 +104,7 @@ def sample_ranks(db):
         RankModel(name="Captain", position=1, share=1.0),
         RankModel(name="Lieutenant", position=2, share=1.0),
         RankModel(name="Blagguard", position=3, share=0.75),
+        RankModel(name="Runt", position=4, share=0.5),
     ]
     db.session.add_all(ranks)
     db.session.commit()

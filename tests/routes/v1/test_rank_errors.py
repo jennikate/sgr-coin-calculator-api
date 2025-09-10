@@ -418,10 +418,10 @@ class TestUpdateRankErrors:
     """
         Tests that a user cannot update a rank if they provide invalid details.
     """
-    def test_update_rank_that_doesnt_exist(self, client):
+    def test_update_rank_that_doesnt_exist(self, client, sample_ranks):
         updated_rank = {
             "name": "Updated Rank",
-            "position": 4,
+            "position": len(sample_ranks) + 3,
             "share": 0.5
         }
         response = client.patch(f"/v1/rank/99", json=updated_rank)

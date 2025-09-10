@@ -220,6 +220,25 @@ class TestGetAllMembersErrors:
         assert result.status_code == 200
         assert result.json == []
 
+    def test_get_all_members_by_rank_invalid_rank(self, client, sample_members, sample_ranks):
+        """
+        Tests that an error is returned if no uuid supplies to get all members by rank.
+        """
+        response = client.get("/v1/members?rank=baduuid")
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "query": {
+                    "rank": [
+                        "Not a valid UUID."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity"
+        }
+
 
 class TestGetMemberErrors:
     def test_get_member_with_invalid_id(self, client):
