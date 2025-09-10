@@ -94,6 +94,31 @@ class MemberByIdResource(MethodView):
 
         member = MemberModel.query.get_or_404(data)
         return member
+    
+
+    @blp.response(200, MessageSchema)
+    def delete(self, member_id):
+        """
+        Delete member by id
+        """
+        try:
+            data = UUID(member_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid member id")
+
+        member = MemberModel.query.get_or_404(data)
+
+        try:
+            db.session.delete(member)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message=str(e))
+
+        return { "message": f"Member id {member_id} deleted" }, 200
 
 
 @blp.route("/members")

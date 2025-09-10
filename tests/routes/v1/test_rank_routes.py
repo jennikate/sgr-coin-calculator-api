@@ -329,7 +329,7 @@ class TestUpdateRank:
 class TestDeleteRank:
     def test_delete_rank(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can delete a rank in the API.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 

@@ -191,3 +191,34 @@ class TestGetMembers:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
+
+@pytest.mark.usefixtures("sample_ranks")
+class TestDeleteMember:
+    def test_delete_member(self, client, sample_members, sample_ranks):
+        """
+        Tests that a user can delete a member in the API.
+        """
+        id = sample_members[1].id # Get the id of a sample member
+        # verify details of the member before updates
+        original_response = client.get(f"/v1/member/{id}")
+        original_expected_response = {
+                "id": str(sample_members[1].id),
+                "name": str(sample_members[1].name),
+                "rank": {
+                    "id": str(sample_ranks[1].id),
+                    "name": str(sample_ranks[1].name),
+                    "position": int(sample_ranks[1].position),
+                    "share": float(sample_ranks[1].share)
+                },
+                "status": bool(sample_members[1].status)
+            }
+        assert original_response.get_json() == original_expected_response
+
+        # delete the member
+        delete_response = client.delete(f"/v1/member/{id}")
+        assert delete_response.status_code == 200
+        assert delete_response.get_json() == {"message": f"Member id {id} deleted" }
+
+        # verify member is no longer there
+        new_get_response = client.get("/v1/members")
+        assert original_response.get_json() not in new_get_response.get_json()

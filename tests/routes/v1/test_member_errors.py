@@ -243,3 +243,26 @@ class TestGetMemberErrors:
             "code": 404,
             "status": "Not Found"
         }
+
+
+@pytest.mark.usefixtures("sample_members")
+class TestDeleteMemberErrors:
+    """
+        Tests that a user cannot delete a member if they provide invalid details.
+    """
+    def test_delete_member_that_doesnt_exist(self, client):
+        response = client.delete("/v1/member/99")
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid member id",
+            "status": "Bad Request"
+        }
+
+    def test_delete_member_without_id(self, client):
+        response = client.delete("/v1/member")
+        assert response.status_code == 405
+        assert response.get_json() ==  {
+            "code": 405,
+            "status": "Method Not Allowed"
+        }
