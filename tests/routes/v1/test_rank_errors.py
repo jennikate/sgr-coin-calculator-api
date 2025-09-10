@@ -80,7 +80,6 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
-
     def test_post_rank_no_share(self, client):
         """
         Tests the correct error shows when posting a rank with no name.
@@ -103,7 +102,6 @@ class TestPostRankErrors:
             },
             "status": "Unprocessable Entity",
         }
-
 
     def test_post_rank_no_fields(self, client):
         """
@@ -130,7 +128,6 @@ class TestPostRankErrors:
             },
             "status": "Unprocessable Entity",
         }
-
 
     def test_post_rank_invalid_types(self, client):
         """

@@ -20,7 +20,3 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "api" = ["py.typed"]
-
-
-
-
