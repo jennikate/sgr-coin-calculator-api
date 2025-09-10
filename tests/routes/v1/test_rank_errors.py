@@ -355,8 +355,7 @@ class TestGetSpecificRankErrors:
             "message": "No ranks found for position: 99",
             "status": "Not Found"
         }
-
-    
+  
     def test_get_rank_by_id_when_does_not_exist(self, client):
         response = client.get("/v1/rank/99")
         
@@ -387,7 +386,6 @@ class TestGetSpecificRankErrors:
             "status": "Bad Request"
         }
     
-
     def test_get_rank_with_invalid_position_type(self, client):
         response = client.get("/v1/rank?position=samson")
         
@@ -404,7 +402,6 @@ class TestGetSpecificRankErrors:
             "status": "Unprocessable Entity",
         }
     
-
     def test_get_rank_with_invalid_name_type(self, client):
         response = client.get("/v1/rank?name=7")
         
@@ -421,10 +418,10 @@ class TestUpdateRankErrors:
     """
         Tests that a user cannot update a rank if they provide invalid details.
     """
-    def test_update_rank_that_doesnt_exist(self, client):
+    def test_update_rank_that_doesnt_exist(self, client, sample_ranks):
         updated_rank = {
             "name": "Updated Rank",
-            "position": 4,
+            "position": len(sample_ranks) + 3,
             "share": 0.5
         }
         response = client.patch(f"/v1/rank/99", json=updated_rank)

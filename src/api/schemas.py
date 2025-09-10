@@ -102,6 +102,10 @@ class MemberSchema(BaseMemberSchema):
             raise ValidationError(f"Rank {value} does not exist")
 
 
+class MemberQueryArgsSchema(Schema):
+    rank = fields.UUID(required=False, metadata={"description": "Filter by rank id"})
+
+
 ###################################################################################################
 #  End of File
 ###################################################################################################

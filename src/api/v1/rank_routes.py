@@ -107,7 +107,7 @@ class RankResource(MethodView):
 @blp.route("/rank/<rank_id>")
 class RankByIdResource(MethodView):
     """
-    Resources for updating or deleting a rank by id.
+    Resources for getting, updating or deleting a rank by id.
     """
     @blp.response(200, RankSchema)
     def get(self, rank_id):
@@ -189,7 +189,7 @@ class AllRanksResource(MethodView):
         """
         Get all ranks
         """
-        ranks = RankModel.query.all()
+        ranks = RankModel.query.order_by(RankModel.position.asc()).all()
         return ranks
 
 ###################################################################################################

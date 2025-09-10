@@ -37,9 +37,9 @@ class TestPostRank:
 
         assert response.status_code == 201
         assert data["id"] == data["id"]  # Check that an id is returned
-        assert data["name"] == "Test Rank"
-        assert data["position"] == 1
-        assert data["share"] == 0.1
+        assert data["name"] == new_rank["name"]
+        assert data["position"] == new_rank["position"]
+        assert data["share"] == new_rank["share"]
 
         # fetch the actual model from the DB
         rank = RankModel.query.get(data["id"])
@@ -145,14 +145,14 @@ class TestUpdateRank:
         # update the rank
         updated_rank = {
             "name": "Updated Rank",
-            "position": 4,
+            "position": len(sample_ranks) + 1,
             "share": 0.5
         }
         update_response = client.patch(f"/v1/rank/{id}", json=updated_rank)
         updated_expected_response = {
             "id": original_data["id"], # id should remain the same
             "name": "Updated Rank",
-            "position": 4,
+            "position": len(sample_ranks) + 1,
             "share": 0.5
         }
         assert update_response.status_code == 200
@@ -164,7 +164,6 @@ class TestUpdateRank:
 
         assert original_data not in new_data
         assert updated_expected_response in new_data
-
 
     def test_update_rank_name_only(self, client, sample_ranks):
         """
@@ -205,7 +204,6 @@ class TestUpdateRank:
         assert original_data not in new_data
         assert updated_expected_response in new_data
 
-
     def test_update_rank_position_only(self, client, sample_ranks):
         """
         Tests that a user can update a rank in the API.
@@ -245,7 +243,6 @@ class TestUpdateRank:
         assert original_data not in new_data
         assert updated_expected_response in new_data
 
-
     def test_update_rank_share_only(self, client, sample_ranks):
         """
         Tests that a user can update a rank in the API.
@@ -284,7 +281,6 @@ class TestUpdateRank:
 
         assert original_data not in new_data
         assert updated_expected_response in new_data
-
 
     def test_update_rank_position_and_share_only(self, client, sample_ranks):
         """
@@ -333,7 +329,7 @@ class TestUpdateRank:
 class TestDeleteRank:
     def test_delete_rank(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can delete a rank in the API.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -363,9 +359,10 @@ class TestDeleteRank:
 ## These tests need ranks to exist, so we reseed the db before each with sample_ranks
 @pytest.mark.usefixtures("sample_ranks")
 class TestGetAllRanks:
-    def test_get_all_ranks(self, client):
+    def test_get_all_ranks(self, client, sample_ranks):
         """
-        Tests that a user can get all ranks from the API.
+        Tests that a user can get all ranks.
+        These should be returned in position order.
         """
         response = client.get("/v1/ranks")
 
@@ -373,24 +370,33 @@ class TestGetAllRanks:
         data = response.get_json()
         assert isinstance(data, list)
 
-        ## Keeping the longhand here as an example for now
-        ## note: id's are returned but we ignore them as they're uuids
-        # assert len(data[0]["id"]) >= 1 for when we move to uuid
-        assert data[0]["id"] is not None
-        assert data[0]["id"] == data[0]["id"]  # Check that an id is returned
-        assert data[0]["name"] == "Captain"
-        assert data[0]["position"] == 1
-        assert data[0]["share"] == 1
-        assert data[1]["id"] == data[1]["id"] 
-        assert data[1]["id"] is not None
-        assert data[1]["name"] == "Lieutenant"
-        assert data[1]["position"] == 2
-        assert data[1]["share"] == 1
-        assert data[2]["id"] == data[2]["id"] 
-        assert data[2]["id"] is not None
-        assert data[2]["name"] == "Blagguard"
-        assert data[2]["position"] == 3
-        assert data[2]["share"] == 0.75
+        expected_response = [
+            {
+                "id": data[0]["id"], # id is a uuid so we can't hardcode it, but we can check it exists
+                "name": sample_ranks[0].name,
+                "position": sample_ranks[0].position,
+                "share": sample_ranks[0].share 
+            },
+            {
+                "id": data[1]["id"],
+                "name": sample_ranks[1].name,
+                "position": sample_ranks[1].position,
+                "share": sample_ranks[1].share 
+            },
+            {
+                "id": data[2]["id"],
+                "name": sample_ranks[2].name,
+                "position": sample_ranks[2].position,
+                "share": sample_ranks[2].share 
+            },
+            {
+                "id": data[3]["id"],
+                "name": sample_ranks[3].name,
+                "position": sample_ranks[3].position,
+                "share": sample_ranks[3].share 
+            }
+        ]
+        assert data == expected_response
 
 ###################################################################################################
 #  ERROR PATHS : post, get one, update, delete

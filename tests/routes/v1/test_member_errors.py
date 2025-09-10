@@ -19,8 +19,8 @@ from src.extensions import db
 ###################################################################################################
 
 # This needs a rank to exist for the member to be posted against
-@pytest.mark.usefixtures("sample_ranks")
-class TestPostMember:
+@pytest.mark.usefixtures("sample_members", "sample_ranks")
+class TestPostMemberErrors:
     def test_post_member_no_payload(self, client, sample_ranks):
         """
         Tests that a 422 response is returned if the POST has no payload.
@@ -205,6 +205,194 @@ class TestPostMember:
             "rank_id": rank_id,
         }
         response = client.post("/v1/member", json=new_member)
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
+
+
+class TestGetAllMembersErrors:
+    def test_get_all_members_when_none_exist(self, client):
+        """
+        Tests that getting all members when none exist returns an empty list.
+        """
+        result = client.get("/v1/members")
+
+        assert result.status_code == 200
+        assert result.json == []
+
+    def test_get_all_members_by_rank_invalid_rank(self, client, sample_members, sample_ranks):
+        """
+        Tests that an error is returned if no uuid supplies to get all members by rank.
+        """
+        response = client.get("/v1/members?rank=baduuid")
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "query": {
+                    "rank": [
+                        "Not a valid UUID."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity"
+        }
+
+
+class TestGetMemberErrors:
+    def test_get_member_with_invalid_id(self, client):
+        """
+        Tests that a 422 response is returned if the GET has an invalid member id.
+        """
+        response = client.get("/v1/member/abc")
+
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid member id",
+            "status": "Bad Request"
+        }
+
+    def test_get_member_when_id_doesnt_exist(self, client):
+        """
+        Tests that a 404 response is returned if the GET has a member id that doesn't exist.
+        """
+        response = client.get(f"/v1/member/{uuid4()}")
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "status": "Not Found"
+        }
+
+@pytest.mark.usefixtures("sample_members", "sample_ranks")
+class TestUpdateMemberErrors:
+    """
+        Tests that a user cannot update a member if they provide invalid details.
+    """
+    def test_update_member_that_doesnt_exist(self, client, sample_members, sample_ranks):
+        updated_member = {
+            "name": "Member Name",
+            "rank_id": str(sample_ranks[2].id),
+        }
+        response = client.patch(f"/v1/member/99", json=updated_member)
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid member id",
+            "status": "Bad Request"
+        }
+
+    def test_update_member_with_existing_details(self, client, sample_members):
+        """
+            Tests that a user cannot update a member if they provide an existing name.
+        """
+        member_name = sample_members[0].name # Get the name of an existing member
+        other_member_id = sample_members[1].id # Get the id of a different existing member to update    
+
+        patch_data = {
+            "name": member_name
+        }
+
+        response = client.patch(f"/v1/member/{other_member_id}", json=patch_data)
+
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "name": [
+                        f"There is already a member with name {member_name}."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+
+    def test_update_member_sqlalchemy_error(self, client, sample_members, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_members[0].id # Get the id of the first sample member (Captain)
+        # create a valid patch payload
+        new_member = {
+            "name": "New Member"
+        }
+        response = client.patch(f"/v1/member/{id}", json=new_member)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_update_member_generic_error(self, client, sample_members, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_members[0].id # Get the id of the first sample member (Captain)
+        # create a valid patch payload
+        new_member = {
+            "name": "New Member"
+        }
+        response = client.patch(f"/v1/member/{id}", json=new_member)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
+
+
+@pytest.mark.usefixtures("sample_members")
+class TestDeleteMemberErrors:
+    """
+        Tests that a user cannot delete a member if they provide invalid details.
+    """
+    def test_delete_member_that_doesnt_exist(self, client):
+        response = client.delete("/v1/member/99")
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid member id",
+            "status": "Bad Request"
+        }
+
+    def test_delete_member_without_id(self, client):
+        response = client.delete("/v1/member")
+        assert response.status_code == 405
+        assert response.get_json() ==  {
+            "code": 405,
+            "status": "Method Not Allowed"
+        }
+
+    def test_delete_member_sqlalchemy_error(self, client, sample_members, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_members[0].id 
+        response = client.delete(f"/v1/member/{id}")
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_delete_member_generic_error(self, client, sample_members, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_members[0].id 
+        response = client.delete(f"/v1/member/{id}")
+        
         assert response.status_code == 500
         data = response.get_json()
         assert "Something went wrong!" in data["message"] 

@@ -104,6 +104,7 @@ def sample_ranks(db):
         RankModel(name="Captain", position=1, share=1.0),
         RankModel(name="Lieutenant", position=2, share=1.0),
         RankModel(name="Blagguard", position=3, share=0.75),
+        RankModel(name="Runt", position=4, share=0.5),
     ]
     db.session.add_all(ranks)
     db.session.commit()
@@ -113,9 +114,10 @@ def sample_ranks(db):
 def sample_members(db, sample_ranks):
     from src.api.models import MemberModel # type: ignore
     members = [
-        MemberModel(name="Alice", rank_id=sample_ranks[0].id),
-        MemberModel(name="Bob", rank_id=sample_ranks[1].id),
+        MemberModel(name="Bob", rank_id=sample_ranks[0].id),
         MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
+        MemberModel(name="Sue", rank_id=sample_ranks[2].id),
+        MemberModel(name="Alice", rank_id=sample_ranks[2].id),
     ]
     db.session.add_all(members)
     db.session.commit()
