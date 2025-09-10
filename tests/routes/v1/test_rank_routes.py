@@ -359,9 +359,10 @@ class TestDeleteRank:
 ## These tests need ranks to exist, so we reseed the db before each with sample_ranks
 @pytest.mark.usefixtures("sample_ranks")
 class TestGetAllRanks:
-    def test_get_all_ranks(self, client):
+    def test_get_all_ranks(self, client, sample_ranks):
         """
-        Tests that a user can get all ranks from the API.
+        Tests that a user can get all ranks.
+        These should be returned in position order.
         """
         response = client.get("/v1/ranks")
 
@@ -369,24 +370,27 @@ class TestGetAllRanks:
         data = response.get_json()
         assert isinstance(data, list)
 
-        ## Keeping the longhand here as an example for now
-        ## note: id's are returned but we ignore them as they're uuids
-        # assert len(data[0]["id"]) >= 1 for when we move to uuid
-        assert data[0]["id"] is not None
-        assert data[0]["id"] == data[0]["id"]  # Check that an id is returned
-        assert data[0]["name"] == "Captain"
-        assert data[0]["position"] == 1
-        assert data[0]["share"] == 1
-        assert data[1]["id"] == data[1]["id"] 
-        assert data[1]["id"] is not None
-        assert data[1]["name"] == "Lieutenant"
-        assert data[1]["position"] == 2
-        assert data[1]["share"] == 1
-        assert data[2]["id"] == data[2]["id"] 
-        assert data[2]["id"] is not None
-        assert data[2]["name"] == "Blagguard"
-        assert data[2]["position"] == 3
-        assert data[2]["share"] == 0.75
+        expected_response = [
+            {
+                "id": data[0]["id"], # id is a uuid so we can't hardcode it, but we can check it exists
+                "name": sample_ranks[0].name,
+                "position": sample_ranks[0].position,
+                "share": sample_ranks[0].share 
+            },
+            {
+                "id": data[1]["id"],
+                "name": sample_ranks[1].name,
+                "position": sample_ranks[1].position,
+                "share": sample_ranks[1].share 
+            },
+            {
+                "id": data[2]["id"],
+                "name": sample_ranks[2].name,
+                "position": sample_ranks[2].position,
+                "share": sample_ranks[2].share 
+            }
+        ]
+        assert data == expected_response
 
 ###################################################################################################
 #  ERROR PATHS : post, get one, update, delete

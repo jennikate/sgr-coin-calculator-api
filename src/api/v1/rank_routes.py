@@ -189,7 +189,7 @@ class AllRanksResource(MethodView):
         """
         Get all ranks
         """
-        ranks = RankModel.query.all()
+        ranks = RankModel.query.order_by(RankModel.position.asc()).all()
         return ranks
 
 ###################################################################################################
