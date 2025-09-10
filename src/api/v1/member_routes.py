@@ -34,7 +34,7 @@ from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
 
 from src.api.models import MemberModel, RankModel # type: ignore
-from src.api.schemas import MemberSchema, MessageSchema
+from src.api.schemas import MemberSchema, MessageSchema, MemberQueryArgsSchema
 
 from src.extensions import db
 
@@ -76,6 +76,7 @@ class MemberResource(MethodView):
             abort(500, message=str(e))
 
         return member
+    
 
 
 @blp.route("/member/<member_id>")
@@ -160,20 +161,26 @@ class AllMemberssResource(MethodView):
     """
     Resource for getting all members.
     """
+    @blp.arguments(MemberQueryArgsSchema, location="query")
     @blp.response(200, MemberSchema(many=True))
-    def get(self):
+    def get(self, args):
         """
         Get all members
         """
-        members = (
-            MemberModel.query
-            .join(MemberModel.rank)  # join so we can sort on rank
-            .order_by(
-                asc(RankModel.position),   # first by rank position
-                asc(MemberModel.name)      # then by member name
-            )
-            .all()
-        )
+        current_app.logger.debug(f"Getting members with args: {args}")
+        query = MemberModel.query.join(MemberModel.rank)
+
+        # Apply filter if provided
+        # Apply filter only if the argument exists
+        rank_id = args.get("rank")  # Matches the schema field name
+        if rank_id is not None:
+            query = query.filter(MemberModel.rank_id == rank_id)
+
+        # Apply sorting
+        members = query.order_by(
+            RankModel.position.asc(),
+            MemberModel.name.asc()
+        ).all()
 
         return members
 

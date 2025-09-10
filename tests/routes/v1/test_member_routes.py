@@ -88,6 +88,53 @@ class TestGetMembers:
                 "status": bool(sample_members[1].status)
             },
             {
+                "id": str(sample_members[3].id),
+                "name": str(sample_members[3].name),
+                "rank": {
+                    "id": str(sample_ranks[2].id),
+                    "name": str(sample_ranks[2].name),
+                    "position": int(sample_ranks[2].position),
+                    "share": float(sample_ranks[2].share)
+                },
+                "status": bool(sample_members[3].status)
+            },
+            {
+                "id": str(sample_members[2].id),
+                "name": str(sample_members[2].name),
+                "rank": {
+                    "id": str(sample_ranks[2].id),
+                    "name": str(sample_ranks[2].name),
+                    "position": int(sample_ranks[2].position),
+                    "share": float(sample_ranks[2].share)
+                },
+                "status": bool(sample_members[2].status)
+            },
+        ]
+
+        assert response.status_code == 200
+        assert response.get_json() == expected_response
+
+    def test_get_all_members_by_rank(self, client, sample_members, sample_ranks):
+        """
+        Tests that a user can get all members for a specific rank.
+        """
+        response = client.get("/v1/members?rank=" + str(sample_ranks[2].id))
+
+        # test the response matches the sample fixtures
+        # TODO: can probably loop over this instead of writing it all out
+        expected_response = [
+            {
+                "id": str(sample_members[3].id),
+                "name": str(sample_members[3].name),
+                "rank": {
+                    "id": str(sample_ranks[2].id),
+                    "name": str(sample_ranks[2].name),
+                    "position": int(sample_ranks[2].position),
+                    "share": float(sample_ranks[2].share)
+                },
+                "status": bool(sample_members[3].status)
+            },
+            {
                 "id": str(sample_members[2].id),
                 "name": str(sample_members[2].name),
                 "rank": {
@@ -152,6 +199,17 @@ class TestGetMembers:
                     "share": float(sample_ranks[1].share)
                 },
                 "status": bool(sample_members[1].status)
+            },
+            {
+                "id": str(sample_members[3].id),
+                "name": str(sample_members[3].name),
+                "rank": {
+                    "id": str(sample_ranks[2].id),
+                    "name": str(sample_ranks[2].name),
+                    "position": int(sample_ranks[2].position),
+                    "share": float(sample_ranks[2].share)
+                },
+                "status": bool(sample_members[3].status)
             },
             {
                 "id": str(sample_members[2].id),
@@ -322,6 +380,7 @@ class TestUpdateMember:
         }
         
         assert expected_result == data
+
 
 @pytest.mark.usefixtures("sample_members", "sample_ranks")
 class TestDeleteMember:

@@ -115,6 +115,7 @@ def sample_members(db, sample_ranks):
     members = [
         MemberModel(name="Bob", rank_id=sample_ranks[0].id),
         MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
+        MemberModel(name="Sue", rank_id=sample_ranks[2].id),
         MemberModel(name="Alice", rank_id=sample_ranks[2].id),
     ]
     db.session.add_all(members)
