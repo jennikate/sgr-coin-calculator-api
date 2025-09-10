@@ -108,3 +108,15 @@ def sample_ranks(db):
     db.session.add_all(ranks)
     db.session.commit()
     return ranks
+
+@pytest.fixture
+def sample_members(db, sample_ranks):
+    from src.api.models import MemberModel # type: ignore
+    members = [
+        MemberModel(name="Alice", rank_id=sample_ranks[0].id),
+        MemberModel(name="Bob", rank_id=sample_ranks[1].id),
+        MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
+    ]
+    db.session.add_all(members)
+    db.session.commit()
+    return members

@@ -9,6 +9,7 @@ This module contains a unit test for the member & members endpoint resource in t
 import pytest
 
 from sqlalchemy.exc import SQLAlchemyError
+from uuid import uuid4
 
 from src.extensions import db
 
@@ -120,14 +121,37 @@ class TestPostMember:
             "status": "Unprocessable Entity",
         }
 
-    def test_post_member_name_exists(self, client, sample_ranks):
+    def test_post_member_rank_doesnt_exist(self, client, sample_ranks):
         """
         Tests that a user can post a new member to the API.
         """
-        rank_id = str(sample_ranks[0].id) # Get the id of the first sample rank & make it a string so we can pass it to the POST
         new_member = {
-            "name": "Member Name",
-            "rank_id": rank_id,
+            "name": "Sample Name",
+            "rank_id": uuid4(), # Generate a random UUID that won't exist in the ranks table
+        }
+        
+        response = client.post("/v1/member", json=new_member)
+        assert response.status_code == 422
+        assert response.get_json() ==  {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "rank_id": [
+                       f"Rank {new_member["rank_id"]} does not exist"
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity",
+        }
+
+    def test_post_member_name_exists(self, client, sample_ranks, sample_members):
+        """
+        Tests that a user can post a new member to the API.
+        """
+        # create a new member with the same name as an existing member
+        new_member = {
+            "name": str(sample_members[1].name), # Get a member name that exists, that isn't the first (so we can apply a different rank)
+            "rank_id": str(sample_ranks[0].id) # Get an existing rank that should be different from the existing member's rank
         }
         
         response = client.post("/v1/member", json=new_member)
@@ -163,7 +187,6 @@ class TestPostMember:
         data = response.get_json()
         assert "An error occurred when inserting to db" in data["message"]
 
-    
     def test_post_member_generic_error(self, client, sample_ranks, monkeypatch):
         def bad_commit():
             raise RuntimeError("Something went wrong!")
