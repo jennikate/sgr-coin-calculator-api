@@ -40,6 +40,8 @@ class RankModel(db.Model):
     members = db.relationship('MemberModel', back_populates='rank')
     # could do cascade='all, delete-orphan which would delete all associated members if a rank is deleted
     # but I don't want to lose the members so this isn't useful here
+    # instead we have `ondelete='SET NULL'`` in the MemberModel and we update it to a DEFAULT_VALUE
+    # when we delete the rank
     # members = db.relationship('Member', back_populates='rank', cascade='all, delete-orphan')
 
     
@@ -68,6 +70,8 @@ class MemberModel(db.Model):
     status = db.Column(db.Boolean, default=True, nullable=False) # active/inactive status
 
     # foreign key to ranks table
+    # There is no ondelete as in the RankResources for delete we update all children (members)
+    # who have that rank, before we delete the rank
     rank_id = db.Column(db.UUID, db.ForeignKey('ranks.id'), nullable=False)
 
     # relationship for easy access
@@ -81,4 +85,3 @@ class MemberModel(db.Model):
 ###################################################################################################
 # End of file
 ###################################################################################################
-
