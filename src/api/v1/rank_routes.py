@@ -31,6 +31,7 @@ from uuid import UUID
 
 from src.api.models import MemberModel, RankModel # type: ignore
 from src.api.schemas import MessageSchema, RankQueryArgsSchema, RankSchema
+from src.constants import DEFAULT_RANK
 
 from src.extensions import db
 
@@ -167,8 +168,12 @@ class RankByIdResource(MethodView):
         # Check rank exists if not return a 404
         rank = RankModel.query.get_or_404(data)
 
+        # If default rank, do not allow delete
+        if rank_id == str(DEFAULT_RANK):
+            abort(400, message="You cannot delete the default rank")
+
         # Update any members who have that rank to the default rank
-        MemberModel.query.filter_by(rank_id=rank_id).update({'rank_id': '3e803238-e059-4656-a7b5-3b2dd85cbda1'}) # TODO: turn into protected rank and make a const
+        MemberModel.query.filter_by(rank_id=rank_id).update({'rank_id': DEFAULT_RANK}) # TODO: turn into protected rank and make a const
     
         try:
             db.session.delete(rank)
