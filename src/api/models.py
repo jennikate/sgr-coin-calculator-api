@@ -17,6 +17,26 @@ from src.extensions import db
 # Classes
 ###################################################################################################
 
+class MemberJobModel(db.Model):
+    """
+    SQLAlchemy model for a ranks table.
+
+    :member_id: From the Member table.
+    :job_id: From the Job table.
+    :member_rank: Copied from the Member table to preserve history.
+    :member_pay: Calculated and patched in when user runs the 'calculate pay' endpoint (not yet written)
+    """
+    __tablename__ = 'member_job'
+    member_id = db.Column(db.UUID, db.ForeignKey('members.id'), primary_key=True)
+    job_id = db.Column(db.UUID, db.ForeignKey('job.id'), primary_key=True)
+
+    member_rank = db.Column(db.String, nullable=False)
+    member_pay = db.Column(db.Float, nullable=False)
+
+    member = db.relationship("MemberModel", back_populates="member_jobs")
+    job = db.relationship("JobModel", back_populates="member_jobs")
+
+
 class RankModel(db.Model):
     """
     SQLAlchemy model for a ranks table.
@@ -76,12 +96,42 @@ class MemberModel(db.Model):
 
     # relationship for easy access
     rank = db.relationship('RankModel', back_populates='members')
-
+    # relationship to association object
+    member_jobs = db.relationship("MemberJobModel", back_populates="member")
+    jobs = db.relationship("JobModel", secondary="member_job", back_populates="members", viewonly=True)
+    # The viewonly=True in the secondary relationship is optional but helps prevent accidental inserts directly through the secondary link.
+    # You can still query member.jobs to see all jobs for a member.
+    # But if you try to append or remove items, SQLAlchemy will prevent it, avoiding accidental inserts that would be missing required data like member_rank and member_pay.
 
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, rank={self.rank})>"
-    
+        # !r means apply the repr() function to the value. Effectively it's apply '' to follow the repr formatting
 
+class JobModel(db.Model):
+    """
+    SQLAlchemy model for a jobs table.
+
+    :title: The title to reference a job.
+    ::
+    """
+    __tablename__ = 'job'
+    id = db.Column(
+        pgUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+        unique=True,
+        nullable=False
+    )
+    title = db.Column(db.String, nullable=False)
+    # TODO: more to come
+    
+    # relationship to association object
+    member_jobs = db.relationship("MemberJobModel", back_populates="job")
+    members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}(id={self.id}, name={self.title!r})>"
+    
 ###################################################################################################
 # End of file
 ###################################################################################################
