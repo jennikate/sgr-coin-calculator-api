@@ -15,5 +15,5 @@ The backend and API for the SGR Coin Calculator
 - create a list of .env variables that need to exist 
 - add link to Client repo when ready
 - add note that swagger is on `http://localhost:5000/api/swagger-ui`
-- add note about cleardowndb script
+- add note about cleardowndb script :: be in venv, update env vars for db url, run it, then run the seed script below to setup the default rank that's needed
 - change member.status to member.active so the bool is more accurate

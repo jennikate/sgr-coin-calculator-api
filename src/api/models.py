@@ -70,12 +70,9 @@ class MemberModel(db.Model):
     status = db.Column(db.Boolean, default=True, nullable=False) # active/inactive status
 
     # foreign key to ranks table
-    rank_id = db.Column(
-        db.UUID, 
-        db.ForeignKey('ranks.id', ondelete='SET NULL'), # temporarily set to NULL so we can then assign a DEFAULT_RANK
-        nullable=False,
-        default='11111111-1111-1111-1111-111111111111'
-    )
+    # There is no ondelete as in the RankResources for delete we update all children (members)
+    # who have that rank, before we delete the rank
+    rank_id = db.Column(db.UUID, db.ForeignKey('ranks.id'), nullable=False)
 
     # relationship for easy access
     rank = db.relationship('RankModel', back_populates='members')
