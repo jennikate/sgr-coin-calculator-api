@@ -22,16 +22,16 @@ Classes:
 #  Imports
 ###################################################################################################
 
-from datetime import date
+from datetime import date, datetime
 from flask import current_app
 from flask.views import MethodView
-from sqlalchemy import asc
+from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
 
 from src.api.models import JobModel, MemberModel, RankModel # type: ignore
-from src.api.schemas import JobSchema, MemberSchema, MessageSchema
+from src.api.schemas import JobQueryArgsSchema, JobSchema, MemberSchema, MessageSchema
 
 from src.extensions import db
 
@@ -80,6 +80,104 @@ class JobResource(MethodView):
             abort(500, message=str(e))
 
         return job
+
+@blp.route("/jobs")
+class AllJobsResource(MethodView):
+    """
+    Resource for getting all jobs.
+    """
+    @blp.arguments(JobQueryArgsSchema, location="query")
+    @blp.response(200, JobSchema(many=True))
+    def get(self, args):
+        """
+        Get all Jobs
+        """
+        current_app.logger.debug(f"Getting jobs with args: {args}")
+        query = JobModel.query
+
+        # Apply filter if exists
+        date = args.get("start_date")  # Matches the schema field name
+        if date is not None:
+            query = query.filter(JobModel.start_date == date)
+
+        # Apply sorting
+        jobs = query.order_by(JobModel.start_date.desc()).all()
+
+        return jobs
+    
+
+@blp.route("/job/<job_id>")
+class JobByIdResource(MethodView):
+    """
+    Resources for getting, updating or deleting a job by id.
+    """
+    @blp.response(200, JobSchema)
+    def get(self, job_id):
+        """
+        Get job by id
+        """
+        try:
+            data = UUID(job_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid job id")
+
+        job = JobModel.query.get_or_404(data)
+        return job
+    
+    @blp.arguments(JobSchema(partial=True)) # allow partial updates
+    @blp.response(200, JobSchema)
+    def patch(self, update_data, job_id):
+        """
+        Update job partially by id
+        """
+        try:
+            data = UUID(job_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid job id")
+
+        job = JobModel.query.get_or_404(data)
+
+        # TODO: update other resources to use this pattern
+        updatable_fields = ["job_name", "job_description", "start_date", "end_date", "total_silver"]
+        for key in updatable_fields:
+            if key in update_data:
+                setattr(job, key, update_data[key])
+
+        try:
+            db.session.add(job)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message=str(e))
+        
+        return job
+
+    @blp.response(200, MessageSchema)
+    def delete(self, job_id):
+        """
+        Delete job by id
+        """
+        try:
+            data = UUID(job_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid job id")
+
+        job = JobModel.query.get_or_404(data)
+
+        try:
+            db.session.delete(job)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message=str(e))
+
+        return { "message": f"job id {job_id} deleted" }, 200
 
 ###################################################################################################
 #  End of File
