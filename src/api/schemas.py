@@ -146,6 +146,10 @@ class JobSchema(Schema):
     def validate_total_silver(self, value, **kwargs):
         if value < 0:
             raise ValidationError("total_silver cannot be a negative value.")
+
+
+class JobQueryArgsSchema(Schema):
+    start_date = fields.Date(required=False, metadata={"description": "Filter by start date"})
         
 
 ###################################################################################################

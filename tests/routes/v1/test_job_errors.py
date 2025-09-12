@@ -224,6 +224,18 @@ class TestPostJob:
         assert response.status_code == 422
         assert data == expected_response
 
+# @pytest.mark.usefixtures("sample_jobs")
+# class TestGetJobs:
+    # def test_get_jobs_by_invalid_date(self, client, sample_jobs):
+    #         """
+    #         Tests that a user can get all jobs for a given date.
+    #         """
+    #         response = client.get("/v1/jobs?date=2025")
+
+    #         expected_response = {}
+
+    #         assert response.status_code == 200
+    #         assert response.get_json() == expected_response
 
 ###################################################################################################
 #  End of file.

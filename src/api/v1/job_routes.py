@@ -31,7 +31,7 @@ from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
 
 from src.api.models import JobModel, MemberModel, RankModel # type: ignore
-from src.api.schemas import JobSchema, MemberSchema, MessageSchema
+from src.api.schemas import JobQueryArgsSchema, JobSchema, MemberSchema, MessageSchema
 
 from src.extensions import db
 
@@ -84,18 +84,27 @@ class JobResource(MethodView):
 @blp.route("/jobs")
 class AllJobsResource(MethodView):
     """
-    Resource for getting all members.
+    Resource for getting all jobs.
     """
+    @blp.arguments(JobQueryArgsSchema, location="query")
     @blp.response(200, JobSchema(many=True))
-    def get(self):
+    def get(self, args):
         """
         Get all Jobs
         """
+        current_app.logger.debug(f"Getting jobs with args: {args}")
+        query = JobModel.query
+
+        # Apply filter if exists
+        date = args.get("start_date")  # Matches the schema field name
+        if date is not None:
+            query = query.filter(JobModel.start_date == date)
 
         # Apply sorting
-        jobs = JobModel.query.order_by(JobModel.start_date.desc()).all()
+        jobs = query.order_by(JobModel.start_date.desc()).all()
 
         return jobs
+    
     
 ###################################################################################################
 #  End of File

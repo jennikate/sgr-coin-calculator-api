@@ -171,6 +171,38 @@ class TestGetJobs:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
+    def test_get_jobs_by_date(self, client, sample_jobs):
+            """
+            Tests that a user can get all jobs for a given date.
+            """
+            response = client.get("/v1/jobs?start_date=2025-04-29")
+            print(f"RESPONSE -> {response.get_json()}")
+
+            expected_response = [
+                {
+                    "id": str(sample_jobs[1].id),
+                    "job_name": str(sample_jobs[1].job_name),
+                    "job_description": str(sample_jobs[1].job_description),
+                    "start_date": str(sample_jobs[1].start_date),
+                    "end_date": None,
+                    "total_silver": int(sample_jobs[1].total_silver),
+                }
+            ]
+
+            assert response.status_code == 200
+            assert response.get_json() == expected_response
+
+
+    def test_get_jobs_by_date_no_jobs(self, client, sample_jobs):
+            """
+            Tests that a user can get all jobs for a given date.
+            """
+            response = client.get("/v1/jobs?start_date=2025-06-29")
+
+            expected_response = []
+
+            assert response.status_code == 200
+            assert response.get_json() == expected_response
 ###################################################################################################
 #  End of file.
 ###################################################################################################
