@@ -158,7 +158,8 @@ class TestGetJobs:
                 "start_date": str(sample_jobs[1].start_date),
                 "end_date": None,
                 "total_silver": int(sample_jobs[1].total_silver),
-            },{
+            },
+            {
                 "id": str(sample_jobs[0].id),
                 "job_name": str(sample_jobs[0].job_name),
                 "job_description": str(sample_jobs[0].job_description),
@@ -192,7 +193,6 @@ class TestGetJobs:
             assert response.status_code == 200
             assert response.get_json() == expected_response
 
-
     def test_get_jobs_by_date_no_jobs(self, client, sample_jobs):
             """
             Tests that a user can get all jobs for a given date.
@@ -203,6 +203,93 @@ class TestGetJobs:
 
             assert response.status_code == 200
             assert response.get_json() == expected_response
+    
+    def test_get_job_by_id(self, client, sample_jobs):
+        """
+        Tests that a user can get a job by id.
+        """
+        job_id = str(sample_jobs[0].id)
+        response = client.get(f"/v1/job/{job_id}")
+
+        expected_response = {
+            "id": str(sample_jobs[0].id),
+            "job_name": str(sample_jobs[0].job_name),
+            "job_description": str(sample_jobs[0].job_description),
+            "start_date": str(sample_jobs[0].start_date),
+            "end_date": str(sample_jobs[0].end_date),
+            "total_silver": int(sample_jobs[0].total_silver),
+        }
+        assert response.status_code == 200
+        assert response.get_json() == expected_response
+
+
+# TODO: extend this to various combinations of things being updated
+# including from and to None values
+@pytest.mark.usefixtures("sample_jobs")
+class TestUpdateJob:
+    def test_update_all_job_fields(self, client, sample_jobs):
+        """
+        Tests that a user can update a job in the API.
+        """
+        # Get an id to update
+        id = sample_jobs[0].id 
+        # Create the update details
+        updated_job = {
+            "job_name": "New job name",
+            "job_description": "New jobs description",
+            "start_date": "2026-04-23",
+            "end_date": "20260428",
+            "total_silver": 7
+        }
+
+        # verify details of the original job are different to the update job
+        original_response = client.get(f"/v1/job/{id}")
+        assert original_response != updated_job
+
+        # update the job
+        update_response = client.patch(f"/v1/job/{id}", json=updated_job)
+        updated_expected_response = {
+            "id": original_response.get_json()["id"], # id should remain the same
+            "job_name": "New job name",
+            "job_description": "New jobs description",
+            "start_date": "2026-04-23",
+            "end_date": "2026-04-28",
+            "total_silver": 7
+        }
+        assert update_response.status_code == 200
+        assert update_response.get_json() == updated_expected_response
+
+
+@pytest.mark.usefixtures("sample_jobs")
+class TestDeleteJob:
+    def test_delete_job(self, client, sample_jobs):
+        """
+        Tests that a user can delete a job in the API.
+        """
+        # Get a job and verify it exists
+        job_id = str(sample_jobs[0].id)
+        original_response = client.get(f"/v1/job/{job_id}")
+
+        expected_response = {
+            "id": str(sample_jobs[0].id),
+            "job_name": str(sample_jobs[0].job_name),
+            "job_description": str(sample_jobs[0].job_description),
+            "start_date": str(sample_jobs[0].start_date),
+            "end_date": str(sample_jobs[0].end_date),
+            "total_silver": int(sample_jobs[0].total_silver),
+        }
+        assert original_response.status_code == 200
+        assert original_response.get_json() == expected_response
+
+        # delete the job
+        delete_response = client.delete(f"/v1/job/{job_id}")
+        assert delete_response.status_code == 200
+        assert delete_response.get_json() == {"message": f"job id {job_id} deleted" }
+
+        # verify job is no longer there
+        new_get_response = client.get("/v1/jobs")
+        assert original_response.get_json() not in new_get_response.get_json()
+
 ###################################################################################################
 #  End of file.
 ###################################################################################################

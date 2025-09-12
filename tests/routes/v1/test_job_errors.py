@@ -10,11 +10,12 @@ This module contains a unit test for the job & job endpoint resource in the `src
 #  IMPORTS
 ###################################################################################################
 
+from uuid import uuid4
 import pytest
 
-from flask import current_app
+from sqlalchemy.exc import SQLAlchemyError
 
-from src.api.models import JobModel # type: ignore
+from src.extensions import db
 
 
 ###################################################################################################
@@ -22,7 +23,7 @@ from src.api.models import JobModel # type: ignore
 ###################################################################################################
 
 
-class TestPostJob:
+class TestPostJobErrors:
     def test_post_job_no_payload(self, client):
         """
         Tests that a job is rejected if there is no payload.
@@ -224,18 +225,251 @@ class TestPostJob:
         assert response.status_code == 422
         assert data == expected_response
 
-# @pytest.mark.usefixtures("sample_jobs")
-# class TestGetJobs:
-    # def test_get_jobs_by_invalid_date(self, client, sample_jobs):
-    #         """
-    #         Tests that a user can get all jobs for a given date.
-    #         """
-    #         response = client.get("/v1/jobs?date=2025")
 
-    #         expected_response = {}
+    def test_post_job_sqlalchemy_error(self, client, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the POST raises a SQLAlchemyError.
+        """
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
 
-    #         assert response.status_code == 200
-    #         assert response.get_json() == expected_response
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        new_job = {
+            "job_name": "job Name",
+            "start_date": "2025-01-01",
+        }
+        response = client.post("/v1/job", json=new_job)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+
+    def test_post_job_generic_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the POST raises any other error.
+        """
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        new_job = {
+            "job_name": "job Name",
+            "start_date": "2025-01-01",
+        }
+        response = client.post("/v1/job", json=new_job)
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
+
+
+class TestGetJobsErrors:
+    def test_get_jobs_by_invalid_date(self, client):
+            """
+            Tests that it errors if an invalid start_date arg is passed.
+            """
+            response = client.get("/v1/jobs?start_date=2025")
+
+            expected_response = {
+                "code": 422,
+                "errors": {
+                    "query": {
+                        "start_date": [
+                            "Not a valid date."
+                        ]
+                    }
+                },
+                "status": "Unprocessable Entity"
+            }
+
+            assert response.status_code == 422
+            assert response.get_json() == expected_response
+
+    def test_get_job_with_invalid_id(self, client):
+        """
+        Tests that a 422 response is returned if the GET has an invalid job id.
+        """
+        response = client.get("/v1/job/abc")
+
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid job id",
+            "status": "Bad Request"
+        }
+
+    def test_get_job_when_id_doesnt_exist(self, client):
+        """
+        Tests that a 404 response is returned if the GET has a job id that doesn't exist.
+        """
+        response = client.get(f"/v1/job/{uuid4()}")
+        assert response.status_code == 404
+        assert response.get_json() ==  {
+            "code": 404,
+            "status": "Not Found"
+        }
+
+
+@pytest.mark.usefixtures("sample_jobs")
+class TestUpdateJobErrors:
+    def test_update_job_that_doesnt_exist(self, client, sample_jobs):
+        updated_job = {
+            "job_name": "New jobs",
+            "start_date": '2025-01-01',
+        }
+        response = client.patch(f"/v1/job/99", json=updated_job)
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid job id",
+            "status": "Bad Request"
+        }
+
+
+    def test_update_job_invalid_values(self, client, sample_jobs):
+        """
+        Tests that it errors if the fields are invalid
+        """
+        # Get an id to update
+        id = sample_jobs[0].id 
+        # Create the update details
+        updated_job = {
+            "job_name": "Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. ",
+            "job_description": "Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. Too long a string for this field. ",
+            "start_date": "0101",
+            "end_date": "01-01-2025",
+            "total_silver": -100.00
+        }
+
+        # verify details of the original job are different to the update job
+        original_response = client.get(f"/v1/job/{id}")
+        assert original_response != updated_job
+
+        # update the job
+        update_response = client.patch(f"/v1/job/{id}", json=updated_job)
+        updated_expected_response = {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "end_date": [
+                        "Not a valid date."
+                    ],
+                    "job_description": [
+                        "job_description must not exceed 256 characters."
+                    ],
+                    "job_name": [
+                        "job_name must not exceed 100 characters."
+                    ],
+                    "start_date": [
+                        "Not a valid date."
+                    ],
+                    "total_silver": [
+                        "total_silver cannot be a negative value."
+                    ]
+                }
+            },
+            "status": "Unprocessable Entity"
+        }
+        assert update_response.status_code == 422
+        assert update_response.get_json() == updated_expected_response
+
+
+    def test_update_job_sqlalchemy_error(self, client, sample_jobs, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a SQLAlchemyError.
+        """
+        id = sample_jobs[0].id 
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        updated_job = {
+            "job_name": "job Name",
+            "start_date": "2025-01-01",
+        }
+        response = client.patch(f"/v1/job/{id}", json=updated_job)
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+
+    def test_update_job_generic_error(self, client, sample_jobs, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises any other error.
+        """
+        id = sample_jobs[0].id 
+
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        updated_job = {
+            "job_name": "job Name",
+            "start_date": "2025-01-01",
+        }
+        response = client.patch(f"/v1/job/{id}", json=updated_job)
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
+
+
+@pytest.mark.usefixtures("sample_jobs")
+class TestDeleteJobErrors:
+    """
+        Tests that a user cannot delete a job if they provide invalid details.
+    """
+    def test_delete_job_that_doesnt_exist(self, client):
+        response = client.delete("/v1/job/99")
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "Invalid job id",
+            "status": "Bad Request"
+        }
+
+    def test_delete_job_without_id(self, client):
+        response = client.delete("/v1/job")
+        assert response.status_code == 405
+        assert response.get_json() ==  {
+            "code": 405,
+            "status": "Method Not Allowed"
+        }
+
+    def test_delete_job_sqlalchemy_error(self, client, sample_jobs, monkeypatch):
+        # Monkeypatch db.session.commit to raise SQLAlchemyError
+        def bad_commit():
+            raise SQLAlchemyError("DB error")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_jobs[0].id 
+        response = client.delete(f"/v1/job/{id}")
+
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "An error occurred when inserting to db" in data["message"]
+
+    
+    def test_delete_job_generic_error(self, client, sample_jobs, monkeypatch):
+        def bad_commit():
+            raise RuntimeError("Something went wrong!")
+
+        monkeypatch.setattr(db.session, "commit", bad_commit)
+
+        id = sample_jobs[0].id 
+        response = client.delete(f"/v1/job/{id}")
+        
+        assert response.status_code == 500
+        data = response.get_json()
+        assert "Something went wrong!" in data["message"] 
+
 
 ###################################################################################################
 #  End of file.
