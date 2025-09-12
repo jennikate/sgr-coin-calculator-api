@@ -56,6 +56,7 @@ class TestPostJob:
 
         assert repr(job) == expected_repr
 
+
     def test_post_job_only_required_fields(self, client):
         """
         Tests that a user can post a new job to the API.
@@ -95,11 +96,12 @@ class TestPostJob:
             "job_name": "Ogres in Hinterlands",
             "job_description": "For Stromgarde, collecting horns for bounty",
             "start_date": "20250423", # should be converted by smorest/Marshmallow to a date
-            "end_date": "2025/04/28", # should be converted by smorest/Marshmallow to a date
+            "end_date": "20250428", # should be converted by smorest/Marshmallow to a date
             "total_silver": "100" # should be converted by smorest/Marshmallow to an int
         }
         response = client.post("/v1/job", json=new_job)
         data = response.get_json()
+        print(data)
 
         expected_response = {
             "end_date": "2025-04-28",
@@ -120,6 +122,54 @@ class TestPostJob:
 
         assert repr(job) == expected_repr
 
+
+class TestGetJobsWhenNoJobs:
+    def test_get_all_jobs_when_none_exist(self, client):
+        """
+        Tests that a user can get all jobs, sorted by date.
+        """
+        response = client.get("/v1/jobs")
+        assert response.status_code == 200
+        assert response.get_json() == []
+
+@pytest.mark.usefixtures("sample_jobs")
+class TestGetJobs:
+    def test_get_all_jobs(self, client, sample_jobs):
+        """
+        Tests that a user can get all jobs, sorted by date.
+        """
+        response = client.get("/v1/jobs")
+
+        # test the response matches the sample fixtures
+        # TODO: can probably loop over this instead of writing it all out
+        expected_response = [
+            {
+                "id": str(sample_jobs[2].id),
+                "job_name": str(sample_jobs[2].job_name),
+                "job_description": None,
+                "start_date": str(sample_jobs[2].start_date),
+                "end_date": None,
+                "total_silver": None,
+            },
+            {
+                "id": str(sample_jobs[1].id),
+                "job_name": str(sample_jobs[1].job_name),
+                "job_description": str(sample_jobs[1].job_description),
+                "start_date": str(sample_jobs[1].start_date),
+                "end_date": None,
+                "total_silver": int(sample_jobs[1].total_silver),
+            },{
+                "id": str(sample_jobs[0].id),
+                "job_name": str(sample_jobs[0].job_name),
+                "job_description": str(sample_jobs[0].job_description),
+                "start_date": str(sample_jobs[0].start_date),
+                "end_date": str(sample_jobs[0].end_date),
+                "total_silver": int(sample_jobs[0].total_silver),
+            }
+        ]
+
+        assert response.status_code == 200
+        assert response.get_json() == expected_response
 
 ###################################################################################################
 #  End of file.

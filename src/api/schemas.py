@@ -7,7 +7,7 @@ This defines the Marshmallow schemas for the API.
 #  Imports
 ###################################################################################################
 
-from marshmallow import Schema, fields, validates, ValidationError # type: ignore
+from marshmallow import Schema, fields, post_load, validates, ValidationError # type: ignore
 from sqlalchemy import select, exists
 
 from src.api.models import MemberModel, RankModel # type: ignore
@@ -20,6 +20,23 @@ from src.extensions import db
 class MessageSchema(Schema):
     message = fields.String(required=True, metadata={"example": "Rank deleted successfully"})
 
+class WholeNumber(fields.Field):
+    """
+    Optional whole number field that rejects decimals.
+    This is to offset the fact that Marshmallow will coerce floats into ints
+    and we would rather force the user to supply an int
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        if value is None:
+            return None
+        try:
+            # Allow integers, reject floats with decimal part
+            if isinstance(value, float) and value != int(value):
+                raise ValidationError("Value cannot have decimals.")
+            return int(value)
+        except (ValueError, TypeError):
+            raise ValidationError("Value must be a whole number.")
 
 ## RANKS
 class RankSchema(Schema):
@@ -111,11 +128,7 @@ class JobSchema(Schema):
     job_description = fields.Str(metadata={"description": "An optional longer description", "example": "For Stromgarde, collecting horns for bounty"})
     start_date = fields.Date(required=True, metadata={"description": "The date of the job, or the start date if a multiday job", "example": "2025-04-23"})
     end_date = fields.Date(metadata={"description": "Optional end date for multiday jobs", "example": "2025-04-28"})
-    # marshmallow coerces floats to int's if you make the field an INT
-    # to force user to supply an int we define it as a float here
-    # then use our validator below to require a whole number
-    # NOTE: there are other ways to do this but as I'm using custom validators I'm retaining that pattern here
-    total_silver = fields.Float(metadata={"Description": "Total amount paid in silver", "example": 100})
+    total_silver = WholeNumber(metadata={"Description": "Total amount paid in silver", "example": 100})
 
     @validates("job_name")
     def validate_job_name(self, value, **kwargs):
@@ -131,10 +144,9 @@ class JobSchema(Schema):
         
     @validates('total_silver')
     def validate_total_silver(self, value, **kwargs):
-        if value is not None and value < 0:
+        if value < 0:
             raise ValidationError("total_silver cannot be a negative value.")
-        if value is not None and value != int(value):
-            raise ValidationError("total_silver cannot have decimals.")
+        
 
 ###################################################################################################
 #  End of File

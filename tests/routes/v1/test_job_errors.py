@@ -142,7 +142,7 @@ class TestPostJob:
                         "Not a valid date."
                     ],
                     "total_silver": [
-                        "Not a valid number."
+                        "Value must be a whole number."
                     ],
                 }
             },
@@ -214,7 +214,7 @@ class TestPostJob:
             "errors": {
                 "json": {
                     "total_silver": [
-                        "total_silver cannot have decimals."
+                        "Value cannot have decimals."
                     ]
                 }
             },

@@ -25,7 +25,7 @@ Classes:
 from datetime import date
 from flask import current_app
 from flask.views import MethodView
-from sqlalchemy import asc
+from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
@@ -81,6 +81,22 @@ class JobResource(MethodView):
 
         return job
 
+@blp.route("/jobs")
+class AllJobsResource(MethodView):
+    """
+    Resource for getting all members.
+    """
+    @blp.response(200, JobSchema(many=True))
+    def get(self):
+        """
+        Get all Jobs
+        """
+
+        # Apply sorting
+        jobs = JobModel.query.order_by(JobModel.start_date.desc()).all()
+
+        return jobs
+    
 ###################################################################################################
 #  End of File
 ###################################################################################################

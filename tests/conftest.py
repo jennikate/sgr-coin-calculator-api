@@ -6,6 +6,7 @@ Test configuration.
 # Imports
 ###################################################################################################
 
+import datetime
 import logging
 import os
 import sys
@@ -18,7 +19,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import inspect
 
 from src import create_app, db as _db
-from src.api.models import RankModel # type: ignore
+from src.api.models import JobModel, MemberModel, RankModel # type: ignore
 
 
 ###################################################################################################
@@ -112,7 +113,6 @@ def sample_ranks(db):
 
 @pytest.fixture
 def sample_members(db, sample_ranks):
-    from src.api.models import MemberModel # type: ignore
     members = [
         MemberModel(name="Bob", rank_id=sample_ranks[0].id),
         MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
@@ -122,3 +122,29 @@ def sample_members(db, sample_ranks):
     db.session.add_all(members)
     db.session.commit()
     return members
+
+@pytest.fixture
+def sample_jobs(db):
+    jobs = [
+        JobModel(
+            job_name="Ogres in Hinterlands",
+            job_description="For Stromgarde, collecting horns for bounty",
+            start_date=datetime.date.fromisoformat("2025-04-23"), # have to format these in the postgres required way for fixture creation
+            end_date=datetime.date.fromisoformat("2025-04-28"),
+            total_silver=100
+        ),
+        JobModel(
+            job_name="Grace artifact",
+            job_description="EPL highborne staff",
+            start_date=datetime.date.fromisoformat("2025-04-29"),
+            total_silver=1500
+        ),
+        JobModel(
+            job_name="Adhoc troll tusks",
+            start_date=datetime.date.fromisoformat("2025-05-03")
+        )
+    ]
+    db.session.add_all(jobs)
+    db.session.commit()
+    return jobs
+
