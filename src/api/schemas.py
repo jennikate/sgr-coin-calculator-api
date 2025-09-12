@@ -58,8 +58,7 @@ class RankSchema(Schema):
         if value < 0:
             raise ValidationError("Share must be a non-negative float.")
         
-        
-    
+           
 class RankQueryArgsSchema(Schema):
     name = fields.String(required=False, metadata={"description": "Filter by rank name"})
     position = fields.Integer(required=False,  metadata={"description": "Filter by rank position"})
@@ -105,6 +104,37 @@ class MemberSchema(BaseMemberSchema):
 class MemberQueryArgsSchema(Schema):
     rank = fields.UUID(required=False, metadata={"description": "Filter by rank id"})
 
+
+class JobSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    job_name = fields.Str(required=True, allow_none=False, metadata={"description": "A short name for a job", "example": "Ogres in Hinterlands"})
+    job_description = fields.Str(metadata={"description": "An optional longer description", "example": "For Stromgarde, collecting horns for bounty"})
+    start_date = fields.Date(required=True, metadata={"description": "The date of the job, or the start date if a multiday job", "example": "2025-04-23"})
+    end_date = fields.Date(metadata={"description": "Optional end date for multiday jobs", "example": "2025-04-28"})
+    # marshmallow coerces floats to int's if you make the field an INT
+    # to force user to supply an int we define it as a float here
+    # then use our validator below to require a whole number
+    # NOTE: there are other ways to do this but as I'm using custom validators I'm retaining that pattern here
+    total_silver = fields.Float(metadata={"Description": "Total amount paid in silver", "example": 100})
+
+    @validates("job_name")
+    def validate_job_name(self, value, **kwargs):
+        if isinstance(value, str) and value.strip() == "":
+            raise ValidationError("job_name must not be empty.")
+        if len(value) > 100:
+            raise ValidationError("job_name must not exceed 100 characters.")
+        
+    @validates('job_description')
+    def validate_job_description(self, value, **kwargs):
+        if len(value) > 256:
+            raise ValidationError("job_description must not exceed 256 characters.")
+        
+    @validates('total_silver')
+    def validate_total_silver(self, value, **kwargs):
+        if value is not None and value < 0:
+            raise ValidationError("total_silver cannot be a negative value.")
+        if value is not None and value != int(value):
+            raise ValidationError("total_silver cannot have decimals.")
 
 ###################################################################################################
 #  End of File

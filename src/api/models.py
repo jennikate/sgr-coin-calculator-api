@@ -8,6 +8,7 @@ SQLAlchemy models for the API.
 #  Imports
 ###################################################################################################
 
+from datetime import date
 from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID as pgUUID # type: ignore
 
@@ -16,6 +17,20 @@ from src.extensions import db
 ###################################################################################################
 # Classes
 ###################################################################################################
+class ReprMixin:
+    """
+        Provide a default __repr__ for ORM model classes.
+        This allows for more complex classes that have optional fields 
+        to log/print out whatever is passed in and anything not passed in
+        is shown as None.
+    """
+    def __repr__(self):
+        package = self.__class__.__module__
+        class_ = self.__class__.__name__
+        attrs = sorted((k, getattr(self, k)) for k in self.__mapper__.columns.keys())
+        sattrs = ', '.join(f'{key}={value!r}' for key, value in attrs)
+        return f'{package}.{class_}({sattrs})'
+
 
 class MemberJobModel(db.Model):
     """
@@ -107,12 +122,9 @@ class MemberModel(db.Model):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, rank={self.rank})>"
         # !r means apply the repr() function to the value. Effectively it's apply '' to follow the repr formatting
 
-class JobModel(db.Model):
+class JobModel(ReprMixin, db.Model):
     """
     SQLAlchemy model for a jobs table.
-
-    :title: The title to reference a job.
-    ::
     """
     __tablename__ = 'job'
     id = db.Column(
@@ -122,15 +134,18 @@ class JobModel(db.Model):
         unique=True,
         nullable=False
     )
-    title = db.Column(db.String, nullable=False)
-    # TODO: more to come
+    job_name = db.Column(db.String(100), nullable=False)
+    job_description = db.Column(db.String(256))
+    start_date = db.Column(db.Date, default=date.today, nullable=False) 
+    end_date = db.Column(db.Date)
+    total_silver = db.Column(db.Integer)
+    company_cut_amt = db.Column(db.Float)
+    remainder_after_payouts = db.Column(db.Float)
     
     # relationship to association object
     member_jobs = db.relationship("MemberJobModel", back_populates="job")
     members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
 
-    def __repr__(self):
-        return f"<{self.__class__.__name__}(id={self.id}, name={self.title!r})>"
     
 ###################################################################################################
 # End of file
