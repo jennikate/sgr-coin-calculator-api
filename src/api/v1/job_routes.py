@@ -64,6 +64,7 @@ class JobResource(MethodView):
 
         try:
             job = JobModel(**new_data)
+            current_app.logger.debug(f"REPR: {repr(job)}")
             # NOTE: we do not need to reformat dates from strings to Python date format here
             # because smorest/Marshmallow does that for us based on the schema
             # then SQLAlchemy turns it into the correct format for the db based on the model

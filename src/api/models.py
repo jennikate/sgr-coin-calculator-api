@@ -17,8 +17,22 @@ from src.extensions import db
 ###################################################################################################
 # Classes
 ###################################################################################################
+class ReprMixin:
+    """
+        Provide a default __repr__ for ORM model classes.
+        This allows for more complex classes that have optional fields 
+        to log/print out whatever is passed in and anything not passed in
+        is shown as None.
+    """
+    def __repr__(self):
+        package = self.__class__.__module__
+        class_ = self.__class__.__name__
+        attrs = sorted((k, getattr(self, k)) for k in self.__mapper__.columns.keys())
+        sattrs = ', '.join(f'{key}={value!r}' for key, value in attrs)
+        return f'{package}.{class_}({sattrs})'
 
-class MemberJobModel(db.Model):
+
+class MemberJobModel(ReprMixin, db.Model):
     """
     SQLAlchemy model for a ranks table.
 
@@ -38,7 +52,7 @@ class MemberJobModel(db.Model):
     job = db.relationship("JobModel", back_populates="member_jobs")
 
 
-class RankModel(db.Model):
+class RankModel(ReprMixin, db.Model):
     """
     SQLAlchemy model for a ranks table.
 
@@ -65,10 +79,6 @@ class RankModel(db.Model):
     # when we delete the rank
     # members = db.relationship('Member', back_populates='rank', cascade='all, delete-orphan')
 
-    
-    def __repr__(self):
-        return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, position={self.position}, share={self.share})>"
-    
 
 class MemberModel(db.Model):
     """
@@ -104,11 +114,12 @@ class MemberModel(db.Model):
     # You can still query member.jobs to see all jobs for a member.
     # But if you try to append or remove items, SQLAlchemy will prevent it, avoiding accidental inserts that would be missing required data like member_rank and member_pay.
 
+    # Keeping an example of the other way to define __repr__ for a model
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, rank={self.rank})>"
         # !r means apply the repr() function to the value. Effectively it's apply '' to follow the repr formatting
 
-class JobModel(db.Model):
+class JobModel(ReprMixin, db.Model):
     """
     SQLAlchemy model for a jobs table.
     """
@@ -132,18 +143,6 @@ class JobModel(db.Model):
     member_jobs = db.relationship("MemberJobModel", back_populates="job")
     members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
 
-    # def __repr__(self):
-    #     return f"""<{self.__class__.__name__}(
-    #         id={self.id}, 
-    #         job_name={self.job_name!r}
-    #         job_description={self.job_description!r}
-    #         start_date={self.start_date!r}
-    #         end_date={self.end_date!r}
-    #         total_silver={self.total_silver}
-    #         company_cut_amount={self.company_cut_amount}
-    #         remainder_after_payouts={self.remainder_after_payouts}
-    #     )>
-    #     """
     
 ###################################################################################################
 # End of file
