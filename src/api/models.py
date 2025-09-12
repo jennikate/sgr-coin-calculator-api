@@ -8,6 +8,7 @@ SQLAlchemy models for the API.
 #  Imports
 ###################################################################################################
 
+from datetime import date
 from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID as pgUUID # type: ignore
 
@@ -110,9 +111,6 @@ class MemberModel(db.Model):
 class JobModel(db.Model):
     """
     SQLAlchemy model for a jobs table.
-
-    :title: The title to reference a job.
-    ::
     """
     __tablename__ = 'job'
     id = db.Column(
@@ -122,15 +120,30 @@ class JobModel(db.Model):
         unique=True,
         nullable=False
     )
-    title = db.Column(db.String, nullable=False)
-    # TODO: more to come
+    job_name = db.Column(db.String(100), nullable=False)
+    job_description = db.Column(db.String(256))
+    start_date = db.Column(db.Date, default=date.today, nullable=False) 
+    end_date = db.Column(db.Date)
+    total_silver = db.Column(db.Integer)
+    company_cut_amt = db.Column(db.Float)
+    remainder_after_payouts = db.Column(db.Float)
     
     # relationship to association object
     member_jobs = db.relationship("MemberJobModel", back_populates="job")
     members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
 
-    def __repr__(self):
-        return f"<{self.__class__.__name__}(id={self.id}, name={self.title!r})>"
+    # def __repr__(self):
+    #     return f"""<{self.__class__.__name__}(
+    #         id={self.id}, 
+    #         job_name={self.job_name!r}
+    #         job_description={self.job_description!r}
+    #         start_date={self.start_date!r}
+    #         end_date={self.end_date!r}
+    #         total_silver={self.total_silver}
+    #         company_cut_amount={self.company_cut_amount}
+    #         remainder_after_payouts={self.remainder_after_payouts}
+    #     )>
+    #     """
     
 ###################################################################################################
 # End of file

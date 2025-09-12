@@ -58,8 +58,7 @@ class RankSchema(Schema):
         if value < 0:
             raise ValidationError("Share must be a non-negative float.")
         
-        
-    
+           
 class RankQueryArgsSchema(Schema):
     name = fields.String(required=False, metadata={"description": "Filter by rank name"})
     position = fields.Integer(required=False,  metadata={"description": "Filter by rank position"})
@@ -104,6 +103,15 @@ class MemberSchema(BaseMemberSchema):
 
 class MemberQueryArgsSchema(Schema):
     rank = fields.UUID(required=False, metadata={"description": "Filter by rank id"})
+
+
+class JobSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    job_name = fields.Str(required=True, metadata={"description": "A short name for a job", "example": "Ogres in Hinterlands"})
+    job_description = fields.Str(metadata={"description": "An optional longer description", "example": "For Stromgarde, collecting horns for bounty"})
+    start_date = fields.Date(required=True, metadata={"description": "The date of the job, or the start date if a multiday job", "example": "(2025, 04, 28)"})
+    end_date = fields.Date(metadata={"description": "Optional end date for multiday jobs", "example": "2025-04-28"})
+    total_silver = fields.Integer(metadata={"Description": "Total amount paid in silver", "example": 100})
 
 
 ###################################################################################################

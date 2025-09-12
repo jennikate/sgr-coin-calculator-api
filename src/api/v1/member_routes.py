@@ -2,9 +2,9 @@
 This module defines flask-smorest resources for endpoints.
 
 Endpoints:
- - /rank:
+ - /member:
    - POST: Add a new member
-   - GET: Get a members by name, position, or id
+   - GET: Get a members by id or get all members
    - PATCH: Update a member with parital or full data
    - DELETE: Delete a member
 
@@ -12,8 +12,8 @@ Endpoints:
     - GET: Get all members
 
 Classes:
- - MemberResource: Resource for CRUD a member.
- - MemberByIdResource: Resource for getting a member by ID.
+ - MemberResource: Resource for creating a member.
+ - MemberByIdResource: Resource for managing a specific member by ID.
  - AllMembersResource: Resource for getting all members.
 
 """
