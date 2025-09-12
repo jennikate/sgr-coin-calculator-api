@@ -32,7 +32,7 @@ class ReprMixin:
         return f'{package}.{class_}({sattrs})'
 
 
-class MemberJobModel(ReprMixin, db.Model):
+class MemberJobModel(db.Model):
     """
     SQLAlchemy model for a ranks table.
 
@@ -52,7 +52,7 @@ class MemberJobModel(ReprMixin, db.Model):
     job = db.relationship("JobModel", back_populates="member_jobs")
 
 
-class RankModel(ReprMixin, db.Model):
+class RankModel(db.Model):
     """
     SQLAlchemy model for a ranks table.
 
@@ -79,6 +79,10 @@ class RankModel(ReprMixin, db.Model):
     # when we delete the rank
     # members = db.relationship('Member', back_populates='rank', cascade='all, delete-orphan')
 
+    
+    def __repr__(self):
+        return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, position={self.position}, share={self.share})>"
+    
 
 class MemberModel(db.Model):
     """
@@ -114,7 +118,6 @@ class MemberModel(db.Model):
     # You can still query member.jobs to see all jobs for a member.
     # But if you try to append or remove items, SQLAlchemy will prevent it, avoiding accidental inserts that would be missing required data like member_rank and member_pay.
 
-    # Keeping an example of the other way to define __repr__ for a model
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name={self.name!r}, rank={self.rank})>"
         # !r means apply the repr() function to the value. Effectively it's apply '' to follow the repr formatting
