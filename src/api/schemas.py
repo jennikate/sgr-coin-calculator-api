@@ -209,8 +209,8 @@ class JobResponseSchema(SQLAlchemySchema):
     start_date = auto_field()
     end_date = auto_field()
     total_silver = auto_field()
-    # members_on_jobs = fields.List(fields.Nested(MemberJobResponseSchema))
-    members_on_jobs = fields.List(fields.Nested(MemberJobResponseSchema))
+    # members_on_job = fields.List(fields.Nested(MemberJobResponseSchema))
+    members_on_job = fields.List(fields.Nested(MemberJobResponseSchema))
 
 
 class JobQueryArgsSchema(Schema):
