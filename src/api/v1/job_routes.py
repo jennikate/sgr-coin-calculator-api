@@ -255,31 +255,40 @@ class JobWithPaymentsById(MethodView):
         Get job by id and calculate its payment amounts
         """
         try:
-            data = UUID(job_id)  # converts string to UUID object
+            job_uuid = UUID(job_id)  # converts string to UUID object
         except ValueError:
             abort(400, message="Invalid job id")
 
-        # Load job with members_on_job and members eagerly
+        # Eager-load member_jobs, member, and rank
         job = JobModel.query.options(
-            joinedload(JobModel.members_on_job).joinedload(MemberJobModel.member)
-        ).get_or_404(job_id)
+            joinedload(JobModel.members_on_job)
+            .joinedload(MemberJobModel.member)
+            .joinedload(MemberModel.rank)
+        ).get_or_404(job_uuid)
+
+        # Compute total shares from rank.share
+        total_shares = sum(jm.member.rank.share for jm in job.members_on_job if jm.member and jm.member.rank)
+        current_app.logger.debug(f"Total shares -> {total_shares}")
 
         # Dynamically calculate pay for each member-job
         for jm in job.members_on_job:
-            jm.calculated_pay = self.calculate_member_pay(job, jm.member)
+            total_shares += jm.member.rank.share
+            jm.calculated_pay = self.calculate_member_pay(job, jm.member, total_shares)
 
         return job
     
     @staticmethod
-    def calculate_member_pay(job, member):
+    def calculate_member_pay(job, member, total_shares):
         """
-        TODO: replace with share logic
-        Example: simple equal split of total_silver.
+        Calculate a member's pay based on their rank's share.
+        TODO: actual calculation used
+        TODO: remove company_cut before calculation to create new total_silver
         """
-        total_members = len(job.members_on_job)
-        if total_members == 0:
+        if not member or not member.rank or total_shares == 0:
             return 0.0
-        return job.total_silver / total_members
+
+        member_share = member.rank.share
+        return (member_share / total_shares) * job.total_silver
 
 
 
