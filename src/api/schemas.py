@@ -189,7 +189,7 @@ class JobUpdateSchema(SQLAlchemySchema):
     end_date = auto_field()
     total_silver = auto_field()
 
-    members = fields.List(fields.UUID(), required=False)        # list of UUIDs to add/merge
+    add_members = fields.List(fields.UUID(), required=False)        # list of UUIDs to add/merge
     remove_members = fields.List(fields.UUID(), required=False) # list of UUIDs to remove
 
 

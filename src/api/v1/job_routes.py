@@ -149,14 +149,14 @@ class JobByIdResource(MethodView):
                 setattr(job, key, value)
 
         # Add / Update members
-        if "members" in update_data:
-            for member_id in update_data.get("members", []):
+        if "add_members" in update_data:
+            for member_id in update_data.get("add_members", []):
                 try:
                     current_app.logger.debug("---------------- TRY ADD MEMBERS --------------")
                     current_app.logger.debug(f"member uuid checking {str(member_id)}")
                     member_uuid = UUID(str(member_id))
                 except ValueError:
-                    abort(400, message=f"Invalid member_id format: {m['member_id']}")
+                    abort(400, message=f"Invalid member_id format: {member_id}")
 
                 member = MemberModel.query.get(member_uuid)
                 if not member:
