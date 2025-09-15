@@ -149,46 +149,47 @@ class JobByIdResource(MethodView):
                 setattr(job, key, value)
 
         # Add / Update members
-        # if "members" in update_data:
-        for m in update_data.get("members", []):
-            try:
-                current_app.logger.debug("---------------- TRY ADD MEMBERS --------------")
-                current_app.logger.debug(f"member uuid checking {str(m["member_id"])}")
-                member_uuid = UUID(str(m["member_id"]))
-            except ValueError:
-                abort(400, message=f"Invalid member_id format: {m['member_id']}")
+        if "members" in update_data:
+            for member_id in update_data.get("members", []):
+                try:
+                    current_app.logger.debug("---------------- TRY ADD MEMBERS --------------")
+                    current_app.logger.debug(f"member uuid checking {str(member_id)}")
+                    member_uuid = UUID(str(member_id))
+                except ValueError:
+                    abort(400, message=f"Invalid member_id format: {m['member_id']}")
 
-            member = MemberModel.query.get(member_uuid)
-            if not member:
-                abort(404, message=f"Member {member_uuid} not found")
+                member = MemberModel.query.get(member_uuid)
+                if not member:
+                    abort(404, message=f"Member {member_uuid} not found")
 
-            # Check if association already exists
-            job_member = next(
-                (jm for jm in job.member_jobs if jm.member_id == member.id),
-                None
-            )
-
-            # Create new association
-            if not job_member:
-                job_member = MemberJobModel(
-                    job=job,
-                    member=member,
-                    member_rank=member.rank.name,  # copy from Member at creation
+                # Check if association already exists
+                job_member = next(
+                    (jm for jm in job.member_jobs if jm.member_id == member.id),
+                    None
                 )
 
-                job.member_jobs.append(job_member)
+                # Create new association
+                if not job_member:
+                    job_member = MemberJobModel(
+                        job=job,
+                        member=member,
+                        member_rank=member.rank.name,  # copy from Member at creation
+                    )
+
+                    job.member_jobs.append(job_member)
 
         # Remove members
-        current_app.logger.debug("---------------- TRY REMOVE MEMBERS --------------")
-        current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
-        current_app.logger.debug(f"remove_members is of length {len(update_data["remove_members"])}")
         if "remove_members" in update_data:
-            for member_id_str in update_data.get("remove_members", []):
+            current_app.logger.debug("---------------- TRY REMOVE MEMBERS --------------")
+            current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
+            current_app.logger.debug(f"remove_members is of length {len(update_data["remove_members"])}")
+            for member_id in update_data.get("remove_members", []):
                 try:
-                    member_uuid = UUID(str(member_id_str))
+                    member_uuid = UUID(str(member_id))
                 except ValueError:
-                    abort(400, message=f"Invalid member_id format: {member_id_str}")
+                    abort(400, message=f"Invalid member_id format: {member_uuid}")
 
+                # Check member is on the association object
                 job_member = next(
                     (jm for jm in job.member_jobs if jm.member_id == member_uuid),
                     None
