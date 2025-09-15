@@ -153,6 +153,7 @@ class JobByIdResource(MethodView):
         # Add / Update members
         if "add_members" in update_data:
             for member_id in update_data.get("add_members", []):
+                # reject early if the uuid is malformed
                 try:
                     current_app.logger.debug("---------------- TRY ADD MEMBERS --------------")
                     current_app.logger.debug(f"member uuid checking {str(member_id)}")
@@ -160,25 +161,22 @@ class JobByIdResource(MethodView):
                 except ValueError:
                     abort(400, message=f"Invalid member_id format: {member_id}")
 
-                member = MemberModel.query.get(member_uuid)
-                if not member:
-                    abort(404, message=f"Member {member_uuid} not found")
-
-                # Check if association already exists
-                job_member = next(
-                    (jm for jm in job.members_on_job if jm.member_id == member.id),
-                    None
-                )
-
-                # Create new association
-                if not job_member:
-                    job_member = MemberJobModel(
-                        job=job,
-                        member=member,
-                        member_rank=member.rank.name,  # copy from Member at creation
-                    )
-
-                    job.members_on_job.append(job_member)
+                # check if already exists on MemberJob table and ignore if it does
+                if not any(jm.member_id == member_id for jm in job.members_on_job):
+                    # if doesn't exist yet get the member model
+                    member = MemberModel.query.get(member_uuid)
+                    # if we find a member then append it
+                    if member:
+                        job.members_on_job.append(
+                            MemberJobModel(
+                                member_id=member.id,
+                                job_id=job.id,
+                                member_rank=member.rank.name,
+                            )
+                        )
+                    else:
+                        # error out if they're trying to add a member that doesn't exist
+                        abort(404, message=f"Member {member_uuid} not found")
 
         # Remove members
         if "remove_members" in update_data:
@@ -261,7 +259,7 @@ class JobWithPaymentsById(MethodView):
         except ValueError:
             abort(400, message="Invalid job id")
 
-        # Eager-load member_jobs, member, and rank
+        # Eager-load members_on_job, member, and rank
         job = JobModel.query.options(
             joinedload(JobModel.members_on_job)
             .joinedload(MemberJobModel.member)
