@@ -244,18 +244,44 @@ class JobByIdResource(MethodView):
         return { "message": f"job id {job_id} deleted" }, 200
 
 
-@blp.route("/job/<uuid:job_id>/payments")
-@blp.response(200, MemberJobResponseSchema(many=True))
-def get_payments(job_id):
-    job = JobModel.query.options(
-        joinedload(JobModel.members_on_job).joinedload(MemberJobModel.member)
-    ).get_or_404(job_id)
+@blp.route("/job/<job_id>/payments")
+class JobWithPaymentsById(MethodView):
+    """
+    Resources for getting a job with its payments.
+    """
+    @blp.response(200, JobResponseSchema)
+    def get(self, job_id):
+        """
+        Get job by id and calculate its payment amounts
+        """
+        try:
+            data = UUID(job_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid job id")
 
-    # Calculate payments and attach to model instances
-    for jm in job.members_on_job:
-        jm.calculated_pay = 1.00  # replace with real calculation
+        # Load job with members_on_job and members eagerly
+        job = JobModel.query.options(
+            joinedload(JobModel.members_on_job).joinedload(MemberJobModel.member)
+        ).get_or_404(job_id)
 
-    return MemberJobResponseSchema(many=True).dump(job.members_on_job)
+        # Dynamically calculate pay for each member-job
+        for jm in job.members_on_job:
+            jm.calculated_pay = self.calculate_member_pay(job, jm.member)
+
+        return job
+    
+    @staticmethod
+    def calculate_member_pay(job, member):
+        """
+        TODO: replace with share logic
+        Example: simple equal split of total_silver.
+        """
+        total_members = len(job.members_on_job)
+        if total_members == 0:
+            return 0.0
+        return job.total_silver / total_members
+
+
 
 
 ###################################################################################################

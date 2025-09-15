@@ -183,34 +183,27 @@ class BaseJobSchema(Schema):
             raise ValidationError("total_silver cannot be a negative value.")
 
 
-class JobUpdateSchema(SQLAlchemySchema):
+class JobUpdateSchema(BaseJobSchema):
     class Meta:
         model = JobModel
         load_instance = False  # only return dict, no automatic model instance
-
-    job_name = auto_field()
-    job_description = auto_field()
-    start_date = auto_field()
-    end_date = auto_field()
-    total_silver = auto_field()
 
     add_members = fields.List(fields.UUID(), required=False)        # list of UUIDs to add/merge
     remove_members = fields.List(fields.UUID(), required=False) # list of UUIDs to remove
 
 
-class JobResponseSchema(SQLAlchemySchema):
+class JobResponseSchema(BaseJobSchema):
     class Meta:
         model = JobModel
         load_instance = True
 
-    id = auto_field(dump_only=True)
-    job_name = auto_field()
-    job_description = auto_field()
-    start_date = auto_field()
-    end_date = auto_field()
-    total_silver = auto_field()
-    # members_on_job = fields.List(fields.Nested(MemberJobResponseSchema))
-    members_on_job = fields.List(fields.Nested(MemberJobResponseSchema))
+    # id = auto_field(dump_only=True)
+    # job_name = auto_field()
+    # job_description = auto_field()
+    # start_date = auto_field()
+    # end_date = auto_field()
+    # total_silver = auto_field()
+    members_on_job = fields.List(fields.Nested(MemberJobResponseSchema), dump_only=True)
 
 
 class JobQueryArgsSchema(Schema):
