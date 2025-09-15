@@ -43,6 +43,11 @@ To remove one
 uv remove <name>
 ```
 
+Updating requirements.txt
+```bash
+uv pip freeze > requirements.txt
+```
+
 ----
 
 ## Creating the db

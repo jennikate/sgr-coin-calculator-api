@@ -8,9 +8,12 @@ This defines the Marshmallow schemas for the API.
 ###################################################################################################
 
 from marshmallow import Schema, fields, post_load, validates, ValidationError # type: ignore
+from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field 
 from sqlalchemy import select, exists
+# TODO: refactor schemas to use the marshmallow_sqlalchemy meta pattern (see JobMemberSchema)
 
-from src.api.models import MemberModel, RankModel # type: ignore
+
+from src.api.models import JobModel, MemberJobModel, MemberModel, RankModel # type: ignore
 from src.extensions import db
 
 ###################################################################################################
@@ -122,7 +125,29 @@ class MemberQueryArgsSchema(Schema):
     rank = fields.UUID(required=False, metadata={"description": "Filter by rank id"})
 
 
-class JobSchema(Schema):
+# JOBS
+class MemberJobRequestSchema(SQLAlchemySchema):
+    class Meta:
+        model = MemberJobModel
+        load_instance = False  # only validate json, return a dict
+        # load_instance = True tells Marshmallow: “I want to deserialize JSON directly into SQLAlchemy model instances.”
+        # in PATCH cases it's considered safer to not do that because you often merge or update objects manually, not blindly load new instances.
+        
+    member_id = auto_field(required=True)
+    member_pay = auto_field()
+
+
+class MemberJobResponseSchema(SQLAlchemySchema):
+    class Meta:
+        model = MemberJobModel
+        load_instance = True
+
+    member_id = auto_field()
+    member_rank = auto_field(dump_only=True)
+    member_pay = auto_field()
+
+
+class BaseJobSchema(Schema):
     id = fields.UUID(dump_only=True)
     job_name = fields.Str(required=True, allow_none=False, metadata={"description": "A short name for a job", "example": "Ogres in Hinterlands"})
     job_description = fields.Str(metadata={"description": "An optional longer description", "example": "For Stromgarde, collecting horns for bounty"})
@@ -146,6 +171,35 @@ class JobSchema(Schema):
     def validate_total_silver(self, value, **kwargs):
         if value < 0:
             raise ValidationError("total_silver cannot be a negative value.")
+
+
+class JobUpdateSchema(SQLAlchemySchema):
+    class Meta:
+        model = JobModel
+        load_instance = False  # only return dict, no automatic model instance
+
+    job_name = auto_field()
+    job_description = auto_field()
+    start_date = auto_field()
+    end_date = auto_field()
+    total_silver = auto_field()
+
+    members = fields.List(fields.Nested(MemberJobRequestSchema))
+    remove_members = fields.List(fields.UUID(), load_only=True)
+
+
+class JobResponseSchema(SQLAlchemySchema):
+    class Meta:
+        model = JobModel
+        load_instance = True
+
+    id = auto_field(dump_only=True)
+    job_name = auto_field()
+    job_description = auto_field()
+    start_date = auto_field()
+    end_date = auto_field()
+    total_silver = auto_field()
+    member_jobs = fields.List(fields.Nested(MemberJobResponseSchema))
 
 
 class JobQueryArgsSchema(Schema):

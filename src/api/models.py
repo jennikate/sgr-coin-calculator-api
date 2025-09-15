@@ -46,10 +46,10 @@ class MemberJobModel(db.Model):
     job_id = db.Column(db.UUID, db.ForeignKey('job.id'), primary_key=True)
 
     member_rank = db.Column(db.String, nullable=False)
-    member_pay = db.Column(db.Float, nullable=False)
+    member_pay = db.Column(db.Float, nullable=True)
 
-    member = db.relationship("MemberModel", back_populates="member_jobs")
     job = db.relationship("JobModel", back_populates="member_jobs")
+    member = db.relationship("MemberModel", back_populates="member_jobs")
 
 
 class RankModel(db.Model):
@@ -143,7 +143,7 @@ class JobModel(ReprMixin, db.Model):
     remainder_after_payouts = db.Column(db.Float)
     
     # relationship to association object
-    member_jobs = db.relationship("MemberJobModel", back_populates="job")
+    member_jobs = db.relationship("MemberJobModel", back_populates="job", lazy="joined")  # <-- lazy="joined" ensures it loads with Job
     members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
 
     
