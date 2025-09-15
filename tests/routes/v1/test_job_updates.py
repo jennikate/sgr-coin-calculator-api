@@ -54,7 +54,12 @@ def job_with_members(client, sample_jobs, sample_members):
     job_id = job.id
 
     # Take some members from sample_members
-    members_to_add = [str(m.id) for m in sample_members[:3]]
+    # members_to_add = [str(m.id) for m in sample_members[:3]]
+    members_to_add = [
+        str(sample_members[0].id),
+        str(sample_members[1].id),
+        str(sample_members[2].id)
+    ]
 
     # Update the job to add members
     update_payload = {"add_members": members_to_add}
@@ -221,6 +226,63 @@ class TestUpdateJob:
             "start_date": str(job_with_members["job"].start_date),
             "end_date": str(job_with_members["job"].end_date),
             "total_silver": job_with_members["job"].total_silver
+        }
+
+        # With the caching in tests
+        # When this called the update job handler and the PATCH was made
+        # It was still returning the object from the fixture
+        # We have to run the fixture to add members to jobs as this can't be done on job creation
+        # But this sits in the test cache and was being used for the assertion
+
+        # The most important thing is the db is updated
+        # So even though the response to the PATCH is returning the wrong data in the test due to caching
+        # We have seen it work correctly in Insomnia
+        # We can check the DB is correctly updated
+
+        client.patch(f"/v1/job/{job_id}", json=updated_job)
+
+        # Expire all cached objects so the next query gets fresh data
+        db.session.expire_all()
+
+        response = client.get(f"/v1/job/{job_id}")
+        assert response.get_json() == expected_response
+
+    def test_add_remove_members_and_update_job(self, client, sample_members, job_with_members):
+        """
+        Tests that a user can add and remove members at the same time as updating the job details.
+        Jobs cannot be created with members, so we must take a job and add members before removing them.
+        """
+        job_id = job_with_members["job_id"]
+        members = job_with_members["members"]
+
+        # Remove the second member
+        member_to_remove = str(members[1].id)
+        member_to_add = str(sample_members[3].id)
+        updated_job = {
+            "remove_members": [member_to_remove], 
+            "add_members": [member_to_add],
+            "total_silver": 12500
+        }
+
+        expected_members = [
+            {
+                "member_id": str(m.id),
+                "member_name": m.name,
+                "member_pay": None,
+                "member_rank": m.rank.name
+            }
+            for m in [members[0], members[2], sample_members[3]]  # originally created with 0,1,2 -> removed 1, added 3
+        ]
+        expected_response = {
+            "company_cut_amt": None,
+            "id": str(job_id),
+            "job_name": job_with_members["job"].job_name,
+            "job_description": job_with_members["job"].job_description,
+            "members_on_job": expected_members,
+            "remainder_after_payouts": None,
+            "start_date": str(job_with_members["job"].start_date),
+            "end_date": str(job_with_members["job"].end_date),
+            "total_silver": 12500
         }
 
         # With the caching in tests
