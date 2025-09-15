@@ -18,7 +18,7 @@ from src.api.models import JobModel # type: ignore
 
 
 ###################################################################################################
-#  HAPPY PATHS : post, get all, get one, update, delete
+#  HAPPY PATHS : post, get all, get one, delete : note updates in their own file
 ###################################################################################################
 
 
@@ -144,25 +144,34 @@ class TestGetJobs:
         # TODO: can probably loop over this instead of writing it all out
         expected_response = [
             {
+                "company_cut_amt": None,
                 "id": str(sample_jobs[2].id),
                 "job_name": str(sample_jobs[2].job_name),
+                "members_on_job": [],
                 "job_description": None,
+                "remainder_after_payouts": None,
                 "start_date": str(sample_jobs[2].start_date),
                 "end_date": None,
                 "total_silver": None,
             },
             {
+                "company_cut_amt": None,
                 "id": str(sample_jobs[1].id),
                 "job_name": str(sample_jobs[1].job_name),
+                "members_on_job": [],
                 "job_description": str(sample_jobs[1].job_description),
+                "remainder_after_payouts": None,
                 "start_date": str(sample_jobs[1].start_date),
                 "end_date": None,
                 "total_silver": int(sample_jobs[1].total_silver),
             },
             {
+                "company_cut_amt": None,
                 "id": str(sample_jobs[0].id),
                 "job_name": str(sample_jobs[0].job_name),
+                "members_on_job": [],
                 "job_description": str(sample_jobs[0].job_description),
+                "remainder_after_payouts": None,
                 "start_date": str(sample_jobs[0].start_date),
                 "end_date": str(sample_jobs[0].end_date),
                 "total_silver": int(sample_jobs[0].total_silver),
@@ -181,9 +190,12 @@ class TestGetJobs:
 
             expected_response = [
                 {
+                    "company_cut_amt": None,
                     "id": str(sample_jobs[1].id),
                     "job_name": str(sample_jobs[1].job_name),
                     "job_description": str(sample_jobs[1].job_description),
+                    "members_on_job": [],
+                    "remainder_after_payouts": None,
                     "start_date": str(sample_jobs[1].start_date),
                     "end_date": None,
                     "total_silver": int(sample_jobs[1].total_silver),
@@ -212,53 +224,18 @@ class TestGetJobs:
         response = client.get(f"/v1/job/{job_id}")
 
         expected_response = {
+            "company_cut_amt": None,
             "id": str(sample_jobs[0].id),
             "job_name": str(sample_jobs[0].job_name),
             "job_description": str(sample_jobs[0].job_description),
+            "members_on_job": [],
+            "remainder_after_payouts": None,
             "start_date": str(sample_jobs[0].start_date),
             "end_date": str(sample_jobs[0].end_date),
             "total_silver": int(sample_jobs[0].total_silver),
         }
         assert response.status_code == 200
         assert response.get_json() == expected_response
-
-
-# TODO: extend this to various combinations of things being updated
-# including from and to None values
-@pytest.mark.usefixtures("sample_jobs")
-class TestUpdateJob:
-    def test_update_all_job_fields(self, client, sample_jobs):
-        """
-        Tests that a user can update a job in the API.
-        """
-        # Get an id to update
-        id = sample_jobs[0].id 
-        # Create the update details
-        updated_job = {
-            "job_name": "New job name",
-            "job_description": "New jobs description",
-            "start_date": "2026-04-23",
-            "end_date": "20260428",
-            "total_silver": 7
-        }
-
-        # verify details of the original job are different to the update job
-        original_response = client.get(f"/v1/job/{id}")
-        assert original_response != updated_job
-
-        # update the job
-        update_response = client.patch(f"/v1/job/{id}", json=updated_job)
-        updated_expected_response = {
-            "id": original_response.get_json()["id"], # id should remain the same
-            "job_name": "New job name",
-            "job_description": "New jobs description",
-            "start_date": "2026-04-23",
-            "end_date": "2026-04-28",
-            "total_silver": 7
-        }
-        assert update_response.status_code == 200
-        assert update_response.get_json() == updated_expected_response
-
 
 @pytest.mark.usefixtures("sample_jobs")
 class TestDeleteJob:
@@ -271,9 +248,12 @@ class TestDeleteJob:
         original_response = client.get(f"/v1/job/{job_id}")
 
         expected_response = {
+            "company_cut_amt": None,
             "id": str(sample_jobs[0].id),
             "job_name": str(sample_jobs[0].job_name),
             "job_description": str(sample_jobs[0].job_description),
+            "members_on_job": [],
+            "remainder_after_payouts": None,
             "start_date": str(sample_jobs[0].start_date),
             "end_date": str(sample_jobs[0].end_date),
             "total_silver": int(sample_jobs[0].total_silver),

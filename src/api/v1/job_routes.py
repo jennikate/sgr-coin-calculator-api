@@ -322,8 +322,6 @@ class JobWithPaymentsById(MethodView):
         return int(raw_value.to_integral_value(rounding=ROUND_DOWN))  # <-- ensures 0 decimals, as we pay only silver not silver copper
 
 
-
-
 ###################################################################################################
 #  End of File
 ###################################################################################################

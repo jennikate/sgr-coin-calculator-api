@@ -125,6 +125,7 @@ def sample_members(db, sample_ranks):
 
 @pytest.fixture
 def sample_jobs(db):
+    # These are the combinations for POSTing a new job, before members are added or payouts calculated
     jobs = [
         JobModel(
             job_name="Ogres in Hinterlands",
