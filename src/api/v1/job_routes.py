@@ -22,7 +22,9 @@ Classes:
 #  Imports
 ###################################################################################################
 
+from constants import COMPANY_CUT # type: ignore
 from datetime import date, datetime
+from decimal import Decimal, ROUND_DOWN
 from flask import current_app
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort # type: ignore
@@ -266,29 +268,58 @@ class JobWithPaymentsById(MethodView):
             .joinedload(MemberModel.rank)
         ).get_or_404(job_uuid)
 
-        # Compute total shares from rank.share
+        current_app.logger.debug("--------- CALCULATING TOTALS ----------")
+
+        company_cut = job.total_silver * COMPANY_CUT
+        payable_to_members = job.total_silver - company_cut
+        current_app.logger.debug(f"Company cut -> payable_to_members [{payable_to_members}] = job.total_silver [{job.total_silver}] - (job.total_silver [{job.total_silver}] * company_cut [{COMPANY_CUT}]")
+
         total_shares = sum(jm.member.rank.share for jm in job.members_on_job if jm.member and jm.member.rank)
         current_app.logger.debug(f"Total shares -> {total_shares}")
+        
+        value_per_share = payable_to_members / total_shares
+        current_app.logger.debug(f"Value per share [{value_per_share}] -> payable_to_members [{payable_to_members}] / total_shares [{total_shares}]")
+
+        total_paid = 0 # starts at 0
 
         # Dynamically calculate pay for each member-job
         for jm in job.members_on_job:
-            total_shares += jm.member.rank.share
-            jm.calculated_pay = self.calculate_member_pay(job, jm.member, total_shares)
+            jm.member_pay = self.calculate_member_pay(jm.member, value_per_share)
+            current_app.logger.debug(f"Paid to {jm.member.name} -> {jm.member_pay}")
+            current_app.logger.debug(f"value type is {type(jm.member_pay)}")
+            total_paid += jm.member_pay
+        current_app.logger.debug(f"Total Paid -> {total_paid}")
+        
+        # Commit the job.company_cut, job.remainder_after_payouts, and member.member_pay to the database
+        try:
+            job.company_cut_amt = company_cut
+            job.remainder_after_payouts = job.total_silver - company_cut - total_paid
+            db.session.commit()
+        except SQLAlchemyError as sqle:
+            current_app.logger.debug(f"500 SQLAlchemyError -> {sqle}")
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            current_app.logger.debug(f"500 Exception -> {e}")
+            db.session.rollback()
+            abort(500, message=str(e))
 
         return job
     
     @staticmethod
-    def calculate_member_pay(job, member, total_shares):
+    def calculate_member_pay(member, value_per_share):
         """
         Calculate a member's pay based on their rank's share.
-        TODO: actual calculation used
-        TODO: remove company_cut before calculation to create new total_silver
         """
-        if not member or not member.rank or total_shares == 0:
+        current_app.logger.debug("--------- CALCULATING PAY FOR MEMBER ----------")
+        current_app.logger.debug(f"Member -> {member.name} with {member.rank.share} shares")
+        if not member or not member.rank:
+            current_app.logger.debug(f"member or member.rank not found")
             return 0.0
-
+        
         member_share = member.rank.share
-        return (member_share / total_shares) * job.total_silver
+        raw_value = Decimal(member_share * value_per_share)
+        return int(raw_value.to_integral_value(rounding=ROUND_DOWN))  # <-- ensures 0 decimals, as we pay only silver not silver copper
 
 
 

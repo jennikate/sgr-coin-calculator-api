@@ -134,7 +134,7 @@ class MemberJobRequestSchema(SQLAlchemySchema):
         # in PATCH cases it's considered safer to not do that because you often merge or update objects manually, not blindly load new instances.
         
     member_id = auto_field(required=True)
-    member_pay = auto_field()
+    # member_pay = auto_field()
 
 
 class MemberJobResponseSchema(SQLAlchemySchema):
@@ -150,8 +150,9 @@ class MemberJobResponseSchema(SQLAlchemySchema):
     member_id = auto_field()
     member_rank = auto_field(dump_only=True)
     # fields not in the model
-    calculated_pay = fields.Float(dump_only=True)
+    fields.Integer(dump_only=True)
     member_name = fields.Method("get_member_name", dump_only=True)
+    member_pay = auto_field()
 
     def get_member_name(self, obj):
         return obj.member.name if hasattr(obj, "member") and obj.member else None
@@ -203,6 +204,8 @@ class JobResponseSchema(BaseJobSchema):
     # start_date = auto_field()
     # end_date = auto_field()
     # total_silver = auto_field()
+    company_cut_amt = fields.Integer(dump_only=True)
+    remainder_after_payouts = fields.Integer(dump_only=True)
     members_on_job = fields.List(fields.Nested(MemberJobResponseSchema), dump_only=True)
 
 
