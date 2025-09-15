@@ -179,6 +179,7 @@ class JobByIdResource(MethodView):
                         abort(404, message=f"Member {member_uuid} not found")
 
         # Remove members
+        
         if "remove_members" in update_data:
             current_app.logger.debug("---------------- TRY REMOVE MEMBERS --------------")
             current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
@@ -190,10 +191,11 @@ class JobByIdResource(MethodView):
                     abort(400, message=f"Invalid member_id format: {member_uuid}")
 
                 # Check member is on the association object
-                job_member = next(
-                    (jm for jm in job.members_on_job if jm.member_id == member_uuid),
-                    None
-                )
+                job_member = db.session.query(MemberJobModel).filter_by(
+                    job_id=job.id,
+                    member_id=member_uuid
+                ).first()
+
                 if job_member:
                     db.session.delete(job_member)
 
