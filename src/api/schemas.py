@@ -141,15 +141,20 @@ class MemberJobResponseSchema(SQLAlchemySchema):
     class Meta:
         model = MemberJobModel
         load_instance = True
+        include_fk = True  # include foreign keys if needed
+        # NOTE
+        # Without include_fk=True, Marshmallow sometimes wraps or replaces the instance when dumping fields that it doesn’t know about (like member_id), which can break fields.Method that accesses obj.member.
+        # With include_fk=True, Marshmallow knows member_id and job_id are columns, so it can serialize them directly without interfering with the model instance.
 
+    # auto_field will map columns from the model
     member_id = auto_field()
     member_rank = auto_field(dump_only=True)
-    member_pay = auto_field()
+    # fields not in the model
+    calculated_pay = fields.Float(dump_only=True)
     member_name = fields.Method("get_member_name", dump_only=True)
 
     def get_member_name(self, obj):
-        return obj.member.name if obj.member else None
-
+        return obj.member.name if hasattr(obj, "member") and obj.member else None
 
 
 class BaseJobSchema(Schema):
@@ -210,6 +215,8 @@ class JobResponseSchema(SQLAlchemySchema):
 class JobQueryArgsSchema(Schema):
     start_date = fields.Date(required=False, metadata={"description": "Filter by start date"})
         
+
+
 
 ###################################################################################################
 #  End of File

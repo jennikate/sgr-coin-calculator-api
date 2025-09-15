@@ -32,7 +32,7 @@ from sqlalchemy.orm import joinedload
 from uuid import UUID
 
 from src.api.models import JobModel, MemberJobModel, MemberModel, RankModel # type: ignore
-from src.api.schemas import JobQueryArgsSchema, BaseJobSchema, JobResponseSchema, JobUpdateSchema, MemberSchema, MessageSchema
+from src.api.schemas import JobQueryArgsSchema, BaseJobSchema, JobResponseSchema, JobUpdateSchema, MemberJobResponseSchema, MemberSchema, MessageSchema
 
 from src.extensions import db
 
@@ -107,7 +107,7 @@ class AllJobsResource(MethodView):
         return jobs
     
 
-@blp.route("/job/<job_id>")
+@blp.route("/job/<uuid:job_id>")
 class JobByIdResource(MethodView):
     """
     Resources for getting, updating or deleting a job by id.
@@ -242,6 +242,21 @@ class JobByIdResource(MethodView):
             abort(500, message=str(e))
 
         return { "message": f"job id {job_id} deleted" }, 200
+
+
+@blp.route("/job/<uuid:job_id>/payments")
+@blp.response(200, MemberJobResponseSchema(many=True))
+def get_payments(job_id):
+    job = JobModel.query.options(
+        joinedload(JobModel.member_jobs).joinedload(MemberJobModel.member)
+    ).get_or_404(job_id)
+
+    # Calculate payments and attach to model instances
+    for jm in job.member_jobs:
+        jm.calculated_pay = 1.00  # replace with real calculation
+
+    return MemberJobResponseSchema(many=True).dump(job.member_jobs)
+
 
 ###################################################################################################
 #  End of File
