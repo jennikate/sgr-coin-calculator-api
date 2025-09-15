@@ -107,7 +107,7 @@ class AllJobsResource(MethodView):
         return jobs
     
 
-@blp.route("/job/<uuid:job_id>")
+@blp.route("/job/<job_id>")
 class JobByIdResource(MethodView):
     """
     Resources for getting, updating or deleting a job by id.
@@ -136,9 +136,9 @@ class JobByIdResource(MethodView):
         except ValueError:
             abort(400, message="Invalid job id")
 
-        # Eager-load member_jobs and associated members
+        # Eager-load members_on_jobs and associated members
         job = JobModel.query.options(
-            joinedload(JobModel.member_jobs).joinedload(MemberJobModel.member)
+            joinedload(JobModel.members_on_jobs).joinedload(MemberJobModel.member)
         ).get_or_404(job_uuid)
 
         # Update job details
@@ -164,7 +164,7 @@ class JobByIdResource(MethodView):
 
                 # Check if association already exists
                 job_member = next(
-                    (jm for jm in job.member_jobs if jm.member_id == member.id),
+                    (jm for jm in job.members_on_jobs if jm.member_id == member.id),
                     None
                 )
 
@@ -176,7 +176,7 @@ class JobByIdResource(MethodView):
                         member_rank=member.rank.name,  # copy from Member at creation
                     )
 
-                    job.member_jobs.append(job_member)
+                    job.members_on_jobs.append(job_member)
 
         # Remove members
         if "remove_members" in update_data:
@@ -191,7 +191,7 @@ class JobByIdResource(MethodView):
 
                 # Check member is on the association object
                 job_member = next(
-                    (jm for jm in job.member_jobs if jm.member_id == member_uuid),
+                    (jm for jm in job.members_on_jobs if jm.member_id == member_uuid),
                     None
                 )
                 if job_member:
@@ -248,14 +248,14 @@ class JobByIdResource(MethodView):
 @blp.response(200, MemberJobResponseSchema(many=True))
 def get_payments(job_id):
     job = JobModel.query.options(
-        joinedload(JobModel.member_jobs).joinedload(MemberJobModel.member)
+        joinedload(JobModel.members_on_jobs).joinedload(MemberJobModel.member)
     ).get_or_404(job_id)
 
     # Calculate payments and attach to model instances
-    for jm in job.member_jobs:
+    for jm in job.members_on_jobs:
         jm.calculated_pay = 1.00  # replace with real calculation
 
-    return MemberJobResponseSchema(many=True).dump(job.member_jobs)
+    return MemberJobResponseSchema(many=True).dump(job.members_on_jobs)
 
 
 ###################################################################################################

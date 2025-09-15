@@ -48,8 +48,8 @@ class MemberJobModel(db.Model):
     member_rank = db.Column(db.String, nullable=False)
     member_pay = db.Column(db.Float, nullable=True)
 
-    job = db.relationship("JobModel", back_populates="member_jobs")
-    member = db.relationship("MemberModel", back_populates="member_jobs")
+    job = db.relationship("JobModel", back_populates="members_on_jobs")
+    member = db.relationship("MemberModel", back_populates="members_on_jobs")
 
 
 class RankModel(db.Model):
@@ -112,7 +112,7 @@ class MemberModel(db.Model):
     # relationship for easy access
     rank = db.relationship('RankModel', back_populates='members')
     # relationship to association object
-    member_jobs = db.relationship("MemberJobModel", back_populates="member")
+    members_on_jobs = db.relationship("MemberJobModel", back_populates="member")
     jobs = db.relationship("JobModel", secondary="member_job", back_populates="members", viewonly=True)
     # The viewonly=True in the secondary relationship is optional but helps prevent accidental inserts directly through the secondary link.
     # You can still query member.jobs to see all jobs for a member.
@@ -143,7 +143,7 @@ class JobModel(ReprMixin, db.Model):
     remainder_after_payouts = db.Column(db.Float)
     
     # relationship to association object
-    member_jobs = db.relationship("MemberJobModel", back_populates="job", lazy="joined")  # <-- lazy="joined" ensures it loads with Job
+    members_on_jobs = db.relationship("MemberJobModel", back_populates="job", lazy="joined")  # <-- lazy="joined" ensures it loads with Job
     members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
 
     
