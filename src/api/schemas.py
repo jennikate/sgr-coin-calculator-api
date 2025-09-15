@@ -145,6 +145,11 @@ class MemberJobResponseSchema(SQLAlchemySchema):
     member_id = auto_field()
     member_rank = auto_field(dump_only=True)
     member_pay = auto_field()
+    member_name = fields.Method("get_member_name", dump_only=True)
+
+    def get_member_name(self, obj):
+        return obj.member.name if obj.member else None
+
 
 
 class BaseJobSchema(Schema):
@@ -183,9 +188,6 @@ class JobUpdateSchema(SQLAlchemySchema):
     start_date = auto_field()
     end_date = auto_field()
     total_silver = auto_field()
-
-    # members = fields.List(fields.Nested(MemberJobRequestSchema))
-    # remove_members = fields.List(fields.UUID(), load_only=True)
 
     members = fields.List(fields.UUID(), required=False)        # list of UUIDs to add/merge
     remove_members = fields.List(fields.UUID(), required=False) # list of UUIDs to remove
