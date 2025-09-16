@@ -10,10 +10,10 @@ This module contains a unit test for the job & job endpoint resource in the `src
 #  IMPORTS
 ###################################################################################################
 
-from uuid import uuid4
 import pytest
 
 from sqlalchemy.exc import SQLAlchemyError
+from uuid import uuid4
 
 from src.extensions import db
 from tests.test_helpers import assert_job_update

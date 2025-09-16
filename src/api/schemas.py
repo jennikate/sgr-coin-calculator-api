@@ -197,12 +197,6 @@ class JobResponseSchema(BaseJobSchema):
         model = JobModel
         load_instance = True
 
-    # id = auto_field(dump_only=True)
-    # job_name = auto_field()
-    # job_description = auto_field()
-    # start_date = auto_field()
-    # end_date = auto_field()
-    # total_silver = auto_field()
     company_cut_amt = fields.Integer(dump_only=True)
     remainder_after_payouts = fields.Integer(dump_only=True)
     members_on_job = fields.List(fields.Nested(MemberJobResponseSchema), dump_only=True)
