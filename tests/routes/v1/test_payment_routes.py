@@ -25,7 +25,7 @@ class TestGetPayments:
         - Validate the response structure matches JobResponseSchema
         - Validate member_pay and other calculated fields
         """
-        print("-------- STARTING TEST JOB PAY -------------")
+
         job = job_with_members["job"]
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]

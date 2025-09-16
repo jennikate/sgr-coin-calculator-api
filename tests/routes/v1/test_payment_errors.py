@@ -18,7 +18,6 @@ from src.extensions import db
 #  ERROR CASES
 ###################################################################################################
 
-@pytest.mark.usefixtures("job_with_members")
 class TestGetPaymentsErrors:
     def test_get_payement_invalid_uuid(self, client):
         """
@@ -29,7 +28,7 @@ class TestGetPaymentsErrors:
         assert response.status_code == 400
         assert response.get_json() == {
             "code": 400,
-            "message": "Invalid job id",
+            "message": "Invalid job -> notauuid",
             "status": "Bad Request"
         }
 
@@ -45,6 +44,26 @@ class TestGetPaymentsErrors:
             "status": "Not Found"
         }
 
+
+@pytest.mark.usefixtures("sample_jobs")
+class TestGetPaymentMemberErrors:
+    def test_get_payment_no_members(self, client, sample_jobs):
+        """
+        Errors if a job has no members associated with it
+        """
+        job_id = str(sample_jobs[0].id)
+
+        response = client.get(f"/v1/job/{job_id}/payments")
+        assert response.status_code == 400
+        assert response.get_json() == {
+            "code": 400,
+            "message": "Job has no members, you must PATCH some to the job before requesting payment", 
+            "status": "Bad Request"
+        }
+
+    
+@pytest.mark.usefixtures("job_with_members")
+class TestGetPaymentDbErrors:
     def test_update_job_sqlalchemy_error(self, client, job_with_members, monkeypatch):
         """
         Tests that a 500 response with a message is returned if the PATCH raises a SQLAlchemyError.
@@ -62,7 +81,6 @@ class TestGetPaymentsErrors:
         assert response.status_code == 500
         data = response.get_json()
         assert "An error occurred when inserting to db" in data["message"]
-
 
     def test_update_job_generic_error(self, client, job_with_members, monkeypatch):
         """

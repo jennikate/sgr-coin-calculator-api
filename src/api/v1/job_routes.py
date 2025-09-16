@@ -22,7 +22,7 @@ Classes:
 #  Imports
 ###################################################################################################
 
-from constants import COMPANY_CUT # type: ignore
+from constants import COMPANY_CUT, DEFAULT_RANK # type: ignore
 from datetime import date, datetime
 from decimal import Decimal, ROUND_DOWN
 from flask import current_app
@@ -168,15 +168,19 @@ class JobByIdResource(MethodView):
                 if not any(jm.member_id == member_id for jm in job.members_on_job):
                     # if doesn't exist yet get the member model
                     member = MemberModel.query.get(member_uuid)
-                    # if we find a member then append it
+                    # if we find a member and it has a default rank do not add it & prompt user to update rank first
+                    # otherwise append it
                     if member:
-                        job.members_on_job.append(
-                            MemberJobModel(
-                                member_id=member.id,
-                                job_id=job.id,
-                                member_rank=member.rank.name,
+                        if member.rank.id == DEFAULT_RANK:
+                            abort(400, message=f"At least one member {member.name} ({member.id}) has DEFAULT rank, you must update them before adding to a job")
+                        else:
+                            job.members_on_job.append(
+                                MemberJobModel(
+                                    member_id=member.id,
+                                    job_id=job.id,
+                                    member_rank=member.rank.name,
+                                )
                             )
-                        )
                     else:
                         # error out if they're trying to add a member that doesn't exist
                         abort(404, message=f"Member {member_uuid} not found")
@@ -246,6 +250,7 @@ class JobByIdResource(MethodView):
         return { "message": f"job id {job_id} deleted" }, 200
 
 
+# TODO: refactor this to make less repetitive esp around validating we have all required details
 @blp.route("/job/<job_id>/payments")
 class JobWithPaymentsById(MethodView):
     """
@@ -257,9 +262,9 @@ class JobWithPaymentsById(MethodView):
         Get job by id and calculate its payment amounts
         """
         try:
-            job_uuid = UUID(job_id)  # converts string to UUID object
+            job_uuid = UUID(job_id)  # checks it is a valid UUID format & rejects early
         except ValueError:
-            abort(400, message="Invalid job id")
+            abort(400, message=f"Invalid job -> {job_id}")
 
         # Eager-load members_on_job, member, and rank
         job = JobModel.query.options(
@@ -267,6 +272,9 @@ class JobWithPaymentsById(MethodView):
             .joinedload(MemberJobModel.member)
             .joinedload(MemberModel.rank)
         ).get_or_404(job_uuid)
+
+        if not job.members_on_job:
+            abort(400, message="Job has no members, you must PATCH some to the job before requesting payment")
 
         current_app.logger.debug("--------- CALCULATING TOTALS ----------")
 

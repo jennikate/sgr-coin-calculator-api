@@ -10,7 +10,8 @@ import pytest
 
 from flask import current_app
 
-from src.api.models import MemberModel, RankModel # type: ignore
+from constants import DEFAULT_RANK # type: ignore
+from src.api.models import MemberModel # type: ignore
 
 
 ###################################################################################################
@@ -64,6 +65,7 @@ class TestGetMembers:
 
         # test the response matches the sample fixtures
         # TODO: can probably loop over this instead of writing it all out
+        print(f"RANK ID -> {sample_members}")
         expected_response = [
             {
                 "id": str(sample_members[0].id),
@@ -108,6 +110,17 @@ class TestGetMembers:
                     "share": float(sample_ranks[2].share)
                 },
                 "status": bool(sample_members[2].status)
+            },
+            {
+                "id": str(sample_members[4].id),
+                "name": str(sample_members[4].name),
+                "rank": {
+                    "id": str(DEFAULT_RANK),
+                    "name": "default",
+                    "position": 99,
+                    "share": 0.0
+                },
+                "status": bool(sample_members[4].status)
             },
         ]
 
@@ -234,6 +247,17 @@ class TestGetMembers:
                     "share": float(sample_ranks[2].share)
                 },
                 "status": bool(sample_members[2].status)
+            },
+            {
+                "id": str(sample_members[4].id),
+                "name": str(sample_members[4].name),
+                "rank": {
+                    "id": str(DEFAULT_RANK),
+                    "name": "default",
+                    "position": 99,
+                    "share": 0.0
+                },
+                "status": bool(sample_members[4].status)
             },
         ]
 
