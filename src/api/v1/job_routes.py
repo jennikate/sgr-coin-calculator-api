@@ -149,20 +149,28 @@ class JobByIdResource(MethodView):
             joinedload(JobModel.members_on_job).joinedload(MemberJobModel.member)
         ).get_or_404(job_uuid)
 
-        # Update job details
-        # TODO: update other resources to use this pattern
-        job_fields = {field.name for field in JobModel.__table__.columns if field.name != "id"}
-        for key, value in update_data.items():
-            if key in job_fields:
-                setattr(job, key, value)
+        ## ORDERING
+        # Bad UUIDs or other value formats are checked by Marshmallow/smorest as part of deserialization
+        # based on what we defined in model/schemas.
+        # so error out before code reaches here.
 
-        # Add / Update members
+        # We define some variables that will let us know if we need to reset payment
+        # and that its safe to run the update
+        # Having this check before updating lets us ensure nothing on the job is updated
+        # when we return an error
+        # And lets us ensure the payments are reset regardless of when the session is updated
+        # e.g. job.total_silver in session will get updated to the updated_data.total_silver value
+        # if we didn't have this counter/check and the job.total_silver updated in session before
+        # we ran the reset payment? check it may get missed because job.total_silver would equal updated_data.total_silver
+        total_members_to_add = 0
+        total_members_to_remove = 0
+        total_silver_different = "total_silver" in update_data and job.total_silver != update_data["total_silver"]
+        total_job_changes = 0
+
+        # Add members
         if "add_members" in update_data:
             for member_id in update_data.get("add_members", []):
                 member_uuid = UUID(str(member_id))
-                # We do not need to check that member_id is a correctly formatted UUID
-                # here because Marshmallow/smorest checks it as part of the deserializtion
-                # based on what we defined in model/schemas.
 
                 # check if already exists on MemberJob table and ignore if it does
                 if not any(jm.member_id == member_id for jm in job.members_on_job):
@@ -181,16 +189,14 @@ class JobByIdResource(MethodView):
                                     member_rank=member.rank.name,
                                 )
                             )
+                            # update our counter so we know how many members were added
+                            total_members_to_add += 1
                     else:
                         # error out if they're trying to add a member that doesn't exist
                         abort(404, message=f"Member {member_uuid} not found")
 
         # Remove members
-        
         if "remove_members" in update_data:
-            current_app.logger.debug("---------------- TRY REMOVE MEMBERS --------------")
-            current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
-            current_app.logger.debug(f"remove_members is of length {len(update_data["remove_members"])}")
             for member_id in update_data.get("remove_members", []):
                 member_uuid = UUID(str(member_id))
 
@@ -201,8 +207,24 @@ class JobByIdResource(MethodView):
                 ).first()
 
                 if job_member:
-                    db.session.delete(job_member)
+                    db.session.delete(job_member) # remove from session but not yet from db
+                    total_members_to_remove += 1
+        
+        # Update job details 
+        job_fields = {field.name for field in JobModel.__table__.columns if field.name != "id"}
+        for key, value in update_data.items():
+            if key in job_fields:
+                setattr(job, key, value)
+                total_job_changes += 1
 
+        # Reset payments
+        if total_members_to_add > 0 or total_members_to_remove > 0 or total_silver_different:
+            current_app.logger.info("------- RESETTING PAYMENT DATA ------")
+            job.company_cut_amt = None
+            job.remainder_after_payouts = None
+            for jm in job.members_on_job:
+                jm.member_pay = None
+        
         try:
             # NOTE:
             # when we did something like job = Job.query.get_or_404(job_uuid)
@@ -213,6 +235,7 @@ class JobByIdResource(MethodView):
             # db.session.add(job) isn’t required — it’s already known to the session.
             # TODO: review other code and check if db.session.add() is needed
             db.session.commit()
+            db.session.refresh(job)
         except SQLAlchemyError as sqle:
             db.session.rollback()
             import traceback
