@@ -82,13 +82,15 @@ class TestUpdateJob:
                     "member_id": str(sample_members[0].id),
                     "member_name": sample_members[0].name,
                     "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[0].rank.name
+                    "member_rank": sample_members[0].rank.name,
+                    "member_rank_position": sample_members[0].rank.position
                 },
                 {
                     "member_id": str(sample_members[1].id),
                     "member_name": sample_members[1].name,
                     "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[1].rank.name
+                    "member_rank": sample_members[1].rank.name,
+                    "member_rank_position": sample_members[1].rank.position
                 }
             ],
             "remainder_after_payouts": None, # not updatable as is calculated on GET /payments
@@ -129,13 +131,15 @@ class TestUpdateJob:
                     "member_id": str(sample_members[0].id),
                     "member_name": sample_members[0].name,
                     "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[0].rank.name
+                    "member_rank": sample_members[0].rank.name,
+                    "member_rank_position": sample_members[0].rank.position
                 },
                 {
                     "member_id": str(sample_members[1].id),
                     "member_name": sample_members[1].name,
                     "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[1].rank.name
+                    "member_rank": sample_members[1].rank.name,
+                    "member_rank_position": sample_members[1].rank.position
                 }
             ],
             "remainder_after_payouts": None, # not updatable as is calculated on GET /payments
@@ -171,7 +175,8 @@ class TestUpdateJob:
                 "member_id": str(m.id),
                 "member_name": m.name,
                 "member_pay": None,
-                "member_rank": m.rank.name
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
             }
             for m in [members[0], members[2]]  # only members remaining
         ]
@@ -228,10 +233,17 @@ class TestUpdateJob:
                 "member_id": str(m.id),
                 "member_name": m.name,
                 "member_pay": None,
-                "member_rank": m.rank.name
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
             }
-            for m in [members[0], members[2], sample_members[3]]  # originally created with 0,1,2 -> removed 1, added 3
+            for m in [members[0], sample_members[3], members[2], ]  
+            # originally created with 0,1,2 -> removed 1, added sample_members[3]
+            # member2 and member3 are the same rank - Blagguard
+            # member 3 is Alice and 2 is Sue so sort order returns in this order
+            # TODO: THIS IS BRITTLE - refactor to ignore sort order
         ]
+
+
         expected_response = {
             "company_cut_amt": None,
             "id": str(job_id),
@@ -261,6 +273,7 @@ class TestUpdateJob:
         db.session.expire_all()
 
         response = client.get(f"/v1/job/{job_id}")
+        print(response.get_json())
         assert response.get_json() == expected_response
 
 
