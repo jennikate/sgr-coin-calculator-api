@@ -7,7 +7,7 @@ This defines the Marshmallow schemas for the API.
 #  Imports
 ###################################################################################################
 
-from marshmallow import Schema, fields, post_load, validates, ValidationError # type: ignore
+from marshmallow import Schema, fields, validates, ValidationError # type: ignore
 from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field 
 from sqlalchemy import select, exists
 # TODO: refactor schemas to use the marshmallow_sqlalchemy meta pattern (see JobMemberSchema)
@@ -134,7 +134,6 @@ class MemberJobRequestSchema(SQLAlchemySchema):
         # in PATCH cases it's considered safer to not do that because you often merge or update objects manually, not blindly load new instances.
         
     member_id = auto_field(required=True)
-    # member_pay = auto_field()
 
 
 class MemberJobResponseSchema(SQLAlchemySchema):

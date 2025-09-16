@@ -133,6 +133,12 @@ class JobByIdResource(MethodView):
         """
         Update job partially by id, including adding and removing members.
         """
+        # Flask-Smorest automatically deserializes the incoming request JSON into this schema 
+        # (because you annotate your route with @blp.arguments(MemberUpdateSchema)).
+        # Marshmallow tries to coerce fields -> e.g. member_id into a uuid.UUID object.
+        # If the string is not a valid UUID it raises a ValidationError.
+        # Flask-Smorest catches that and returns a 422 with the error details.
+        current_app.logger.debug("---------------- STARTING PATCH --------------")
         try:
             job_uuid = UUID(job_id)  # converts string to UUID object
         except ValueError:
@@ -153,13 +159,10 @@ class JobByIdResource(MethodView):
         # Add / Update members
         if "add_members" in update_data:
             for member_id in update_data.get("add_members", []):
-                # reject early if the uuid is malformed
-                try:
-                    current_app.logger.debug("---------------- TRY ADD MEMBERS --------------")
-                    current_app.logger.debug(f"member uuid checking {str(member_id)}")
-                    member_uuid = UUID(str(member_id))
-                except ValueError:
-                    abort(400, message=f"Invalid member_id format: {member_id}")
+                member_uuid = UUID(str(member_id))
+                # We do not need to check that member_id is a correctly formatted UUID
+                # here because Marshmallow/smorest checks it as part of the deserializtion
+                # based on what we defined in model/schemas.
 
                 # check if already exists on MemberJob table and ignore if it does
                 if not any(jm.member_id == member_id for jm in job.members_on_job):
@@ -185,10 +188,7 @@ class JobByIdResource(MethodView):
             current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
             current_app.logger.debug(f"remove_members is of length {len(update_data["remove_members"])}")
             for member_id in update_data.get("remove_members", []):
-                try:
-                    member_uuid = UUID(str(member_id))
-                except ValueError:
-                    abort(400, message=f"Invalid member_id format: {member_uuid}")
+                member_uuid = UUID(str(member_id))
 
                 # Check member is on the association object
                 job_member = db.session.query(MemberJobModel).filter_by(

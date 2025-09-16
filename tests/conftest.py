@@ -149,3 +149,35 @@ def sample_jobs(db):
     db.session.commit()
     return jobs
 
+
+@pytest.fixture
+def job_with_members(client, sample_jobs, sample_members):
+    """
+    Creates a job and adds members to it.
+    Returns the job id and the members added for use in tests.
+    """
+    # Take the first job from the sample_jobs fixture
+    job = sample_jobs[0]
+    job_id = job.id
+
+    # Take some members from sample_members
+    # members_to_add = [str(m.id) for m in sample_members[:3]]
+    members_to_add = [
+        str(sample_members[0].id),
+        str(sample_members[1].id),
+        str(sample_members[2].id)
+    ]
+
+    # Update the job to add members
+    update_payload = {"add_members": members_to_add}
+    response = client.patch(f"/v1/job/{job_id}", json=update_payload)
+    
+    # Ensure the update succeeded
+    assert response.status_code == 200
+
+    # Return both the job id and the members added
+    return {
+        "job_id": job_id,
+        "members": sample_members[:3],
+        "job": job
+    }

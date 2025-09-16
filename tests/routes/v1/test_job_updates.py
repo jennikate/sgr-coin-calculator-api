@@ -12,68 +12,13 @@ This module contains a unit test for the job & job endpoint resource in the `src
 
 import pytest
 
-from flask import current_app
-
-from src.api.models import JobModel # type: ignore
 from src import db
+from tests.test_helpers import assert_job_update
 
 
 ###################################################################################################
 #  HAPPY PATHS : updating with members
 ###################################################################################################
-
-
-def assert_job_update(client, job_id, updated_job, expected_response):
-    """
-    Reusable helper to assert that updating a job works as expected.
-    """
-    print(f"-- updated -> {updated_job}")
-    # Get the original job
-    original_response = client.get(f"/v1/job/{job_id}")
-    original_data = original_response.get_json()
-
-    # Verify that the update actually changes something
-    assert original_data != updated_job
-
-    # Perform the update
-    update_response = client.patch(f"/v1/job/{job_id}", json=updated_job)
-
-    # Assert status code and response
-    assert update_response.status_code == 200
-    assert update_response.get_json() == expected_response
-
-
-@pytest.fixture
-def job_with_members(client, sample_jobs, sample_members):
-    """
-    Creates a job and adds members to it.
-    Returns the job id and the members added for use in tests.
-    """
-    # Take the first job from the sample_jobs fixture
-    job = sample_jobs[0]
-    job_id = job.id
-
-    # Take some members from sample_members
-    # members_to_add = [str(m.id) for m in sample_members[:3]]
-    members_to_add = [
-        str(sample_members[0].id),
-        str(sample_members[1].id),
-        str(sample_members[2].id)
-    ]
-
-    # Update the job to add members
-    update_payload = {"add_members": members_to_add}
-    response = client.patch(f"/v1/job/{job_id}", json=update_payload)
-    
-    # Ensure the update succeeded
-    assert response.status_code == 200
-
-    # Return both the job id and the members added
-    return {
-        "job_id": job_id,
-        "members": sample_members[:3],
-        "job": job
-    }
 
 @pytest.mark.usefixtures("sample_jobs")
 class TestUpdateJob:
@@ -105,7 +50,12 @@ class TestUpdateJob:
         }
         
         # Call the reusable helper
-        assert_job_update(client, job_id, updated_job, expected_response)
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response
+        )
 
     def test_update_some_job_fields_and_add_members(self, client, sample_members, sample_jobs):
         """
@@ -148,7 +98,12 @@ class TestUpdateJob:
         }
         
         # Call the reusable helper
-        assert_job_update(client, job_id, updated_job, expected_response)
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response
+        )
 
     def test_add_members(self, client, sample_members, sample_jobs):
         """
@@ -190,7 +145,12 @@ class TestUpdateJob:
         }
         
         # Call the reusable helper
-        assert_job_update(client, job_id, updated_job, expected_response)
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response
+        )
 
     def test_remove_members(self, client, job_with_members):
         """
