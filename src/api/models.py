@@ -46,10 +46,10 @@ class MemberJobModel(db.Model):
     job_id = db.Column(db.UUID, db.ForeignKey('job.id'), primary_key=True)
 
     member_rank = db.Column(db.String, nullable=False)
-    member_pay = db.Column(db.Float, nullable=False)
+    member_pay = db.Column(db.Integer, nullable=True)
 
-    member = db.relationship("MemberModel", back_populates="member_jobs")
-    job = db.relationship("JobModel", back_populates="member_jobs")
+    job = db.relationship("JobModel", back_populates="members_on_job")
+    member = db.relationship("MemberModel", back_populates="members_on_job")
 
 
 class RankModel(db.Model):
@@ -112,7 +112,7 @@ class MemberModel(db.Model):
     # relationship for easy access
     rank = db.relationship('RankModel', back_populates='members')
     # relationship to association object
-    member_jobs = db.relationship("MemberJobModel", back_populates="member")
+    members_on_job = db.relationship("MemberJobModel", back_populates="member")
     jobs = db.relationship("JobModel", secondary="member_job", back_populates="members", viewonly=True)
     # The viewonly=True in the secondary relationship is optional but helps prevent accidental inserts directly through the secondary link.
     # You can still query member.jobs to see all jobs for a member.
@@ -139,11 +139,11 @@ class JobModel(ReprMixin, db.Model):
     start_date = db.Column(db.Date, default=date.today, nullable=False) 
     end_date = db.Column(db.Date)
     total_silver = db.Column(db.Integer)
-    company_cut_amt = db.Column(db.Float)
-    remainder_after_payouts = db.Column(db.Float)
+    company_cut_amt = db.Column(db.Integer)
+    remainder_after_payouts = db.Column(db.Integer)
     
     # relationship to association object
-    member_jobs = db.relationship("MemberJobModel", back_populates="job")
+    members_on_job = db.relationship("MemberJobModel", back_populates="job", lazy="joined")  # <-- lazy="joined" ensures it loads with Job
     members = db.relationship("MemberModel", secondary="member_job", back_populates="jobs", viewonly=True)
 
     

@@ -22,16 +22,19 @@ Classes:
 #  Imports
 ###################################################################################################
 
+from constants import COMPANY_CUT # type: ignore
 from datetime import date, datetime
+from decimal import Decimal, ROUND_DOWN
 from flask import current_app
 from flask.views import MethodView
+from flask_smorest import Blueprint, abort # type: ignore
 from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError # to catch db errors
-from flask_smorest import Blueprint, abort # type: ignore
+from sqlalchemy.orm import joinedload
 from uuid import UUID
 
-from src.api.models import JobModel, MemberModel, RankModel # type: ignore
-from src.api.schemas import JobQueryArgsSchema, JobSchema, MemberSchema, MessageSchema
+from src.api.models import JobModel, MemberJobModel, MemberModel, RankModel # type: ignore
+from src.api.schemas import JobQueryArgsSchema, BaseJobSchema, JobResponseSchema, JobUpdateSchema, MemberJobResponseSchema, MemberSchema, MessageSchema
 
 from src.extensions import db
 
@@ -54,8 +57,8 @@ class JobResource(MethodView):
     """
     Resources for creating a job.
     """
-    @blp.arguments(JobSchema)
-    @blp.response(201, JobSchema)
+    @blp.arguments(BaseJobSchema)
+    @blp.response(201, BaseJobSchema)
     def post(self, new_data):
         """
         Add a new job
@@ -64,7 +67,6 @@ class JobResource(MethodView):
 
         try:
             job = JobModel(**new_data)
-            current_app.logger.debug(f"REPR: {repr(job)}")
             # NOTE: we do not need to reformat dates from strings to Python date format here
             # because smorest/Marshmallow does that for us based on the schema
             # then SQLAlchemy turns it into the correct format for the db based on the model
@@ -81,13 +83,14 @@ class JobResource(MethodView):
 
         return job
 
+
 @blp.route("/jobs")
 class AllJobsResource(MethodView):
     """
     Resource for getting all jobs.
     """
     @blp.arguments(JobQueryArgsSchema, location="query")
-    @blp.response(200, JobSchema(many=True))
+    @blp.response(200, JobResponseSchema(many=True))
     def get(self, args):
         """
         Get all Jobs
@@ -111,7 +114,7 @@ class JobByIdResource(MethodView):
     """
     Resources for getting, updating or deleting a job by id.
     """
-    @blp.response(200, JobSchema)
+    @blp.response(200, JobResponseSchema)
     def get(self, job_id):
         """
         Get job by id
@@ -124,30 +127,93 @@ class JobByIdResource(MethodView):
         job = JobModel.query.get_or_404(data)
         return job
     
-    @blp.arguments(JobSchema(partial=True)) # allow partial updates
-    @blp.response(200, JobSchema)
+    @blp.arguments(JobUpdateSchema(partial=True)) # allow partial updates
+    @blp.response(200, JobResponseSchema)
     def patch(self, update_data, job_id):
         """
-        Update job partially by id
+        Update job partially by id, including adding and removing members.
         """
+        # Flask-Smorest automatically deserializes the incoming request JSON into this schema 
+        # (because you annotate your route with @blp.arguments(MemberUpdateSchema)).
+        # Marshmallow tries to coerce fields -> e.g. member_id into a uuid.UUID object.
+        # If the string is not a valid UUID it raises a ValidationError.
+        # Flask-Smorest catches that and returns a 422 with the error details.
+        current_app.logger.debug("---------------- STARTING PATCH --------------")
         try:
-            data = UUID(job_id)  # converts string to UUID object
+            job_uuid = UUID(job_id)  # converts string to UUID object
         except ValueError:
             abort(400, message="Invalid job id")
 
-        job = JobModel.query.get_or_404(data)
+        # Eager-load members_on_job and associated members
+        job = JobModel.query.options(
+            joinedload(JobModel.members_on_job).joinedload(MemberJobModel.member)
+        ).get_or_404(job_uuid)
 
+        # Update job details
         # TODO: update other resources to use this pattern
-        updatable_fields = ["job_name", "job_description", "start_date", "end_date", "total_silver"]
-        for key in updatable_fields:
-            if key in update_data:
-                setattr(job, key, update_data[key])
+        job_fields = {field.name for field in JobModel.__table__.columns if field.name != "id"}
+        for key, value in update_data.items():
+            if key in job_fields:
+                setattr(job, key, value)
+
+        # Add / Update members
+        if "add_members" in update_data:
+            for member_id in update_data.get("add_members", []):
+                member_uuid = UUID(str(member_id))
+                # We do not need to check that member_id is a correctly formatted UUID
+                # here because Marshmallow/smorest checks it as part of the deserializtion
+                # based on what we defined in model/schemas.
+
+                # check if already exists on MemberJob table and ignore if it does
+                if not any(jm.member_id == member_id for jm in job.members_on_job):
+                    # if doesn't exist yet get the member model
+                    member = MemberModel.query.get(member_uuid)
+                    # if we find a member then append it
+                    if member:
+                        job.members_on_job.append(
+                            MemberJobModel(
+                                member_id=member.id,
+                                job_id=job.id,
+                                member_rank=member.rank.name,
+                            )
+                        )
+                    else:
+                        # error out if they're trying to add a member that doesn't exist
+                        abort(404, message=f"Member {member_uuid} not found")
+
+        # Remove members
+        
+        if "remove_members" in update_data:
+            current_app.logger.debug("---------------- TRY REMOVE MEMBERS --------------")
+            current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
+            current_app.logger.debug(f"remove_members is of length {len(update_data["remove_members"])}")
+            for member_id in update_data.get("remove_members", []):
+                member_uuid = UUID(str(member_id))
+
+                # Check member is on the association object
+                job_member = db.session.query(MemberJobModel).filter_by(
+                    job_id=job.id,
+                    member_id=member_uuid
+                ).first()
+
+                if job_member:
+                    db.session.delete(job_member)
 
         try:
-            db.session.add(job)
+            # NOTE:
+            # when we did something like job = Job.query.get_or_404(job_uuid)
+            # SQLAlchemy automatically loads job into the current session.
+            # Any changes you make to its attributes (e.g., job.job_name = "New Name") are tracked by the session.
+            # so at db.session.commit()
+            # SQLAlchemy flushes all changes for any objects in the session, including job and any JobMember rows you appended/modified.
+            # db.session.add(job) isn’t required — it’s already known to the session.
+            # TODO: review other code and check if db.session.add() is needed
             db.session.commit()
-        except SQLAlchemyError:
+        except SQLAlchemyError as sqle:
             db.session.rollback()
+            import traceback
+            print(traceback.format_exc())
+            current_app.logger.debug(f"500 error with {str(sqle)}")
             abort(500, message="An error occurred when inserting to db")
         except Exception as e:
             db.session.rollback()
@@ -178,6 +244,83 @@ class JobByIdResource(MethodView):
             abort(500, message=str(e))
 
         return { "message": f"job id {job_id} deleted" }, 200
+
+
+@blp.route("/job/<job_id>/payments")
+class JobWithPaymentsById(MethodView):
+    """
+    Resources for getting a job with its payments.
+    """
+    @blp.response(200, JobResponseSchema)
+    def get(self, job_id):
+        """
+        Get job by id and calculate its payment amounts
+        """
+        try:
+            job_uuid = UUID(job_id)  # converts string to UUID object
+        except ValueError:
+            abort(400, message="Invalid job id")
+
+        # Eager-load members_on_job, member, and rank
+        job = JobModel.query.options(
+            joinedload(JobModel.members_on_job)
+            .joinedload(MemberJobModel.member)
+            .joinedload(MemberModel.rank)
+        ).get_or_404(job_uuid)
+
+        current_app.logger.debug("--------- CALCULATING TOTALS ----------")
+
+        company_cut = job.total_silver * COMPANY_CUT
+        payable_to_members = job.total_silver - company_cut
+        current_app.logger.debug(f"Company cut -> payable_to_members [{payable_to_members}] = job.total_silver [{job.total_silver}] - (job.total_silver [{job.total_silver}] * company_cut [{COMPANY_CUT}]")
+
+        total_shares = sum(jm.member.rank.share for jm in job.members_on_job if jm.member and jm.member.rank)
+        current_app.logger.debug(f"Total shares -> {total_shares}")
+        
+        value_per_share = payable_to_members / total_shares
+        current_app.logger.debug(f"Value per share [{value_per_share}] -> payable_to_members [{payable_to_members}] / total_shares [{total_shares}]")
+
+        total_paid = 0 # starts at 0
+
+        # Dynamically calculate pay for each member-job
+        for jm in job.members_on_job:
+            jm.member_pay = self.calculate_member_pay(jm.member, value_per_share)
+            current_app.logger.debug(f"Paid to {jm.member.name} -> {jm.member_pay}")
+            current_app.logger.debug(f"value type is {type(jm.member_pay)}")
+            total_paid += jm.member_pay
+        current_app.logger.debug(f"Total Paid -> {total_paid}")
+        
+        # Commit the job.company_cut, job.remainder_after_payouts, and member.member_pay to the database
+        try:
+            job.company_cut_amt = company_cut
+            job.remainder_after_payouts = job.total_silver - company_cut - total_paid
+            db.session.commit()
+        except SQLAlchemyError as sqle:
+            current_app.logger.debug(f"500 SQLAlchemyError -> {sqle}")
+            db.session.rollback()
+            abort(500, message="An error occurred when inserting to db")
+        except Exception as e:
+            current_app.logger.debug(f"500 Exception -> {e}")
+            db.session.rollback()
+            abort(500, message=str(e))
+
+        return job
+    
+    @staticmethod
+    def calculate_member_pay(member, value_per_share):
+        """
+        Calculate a member's pay based on their rank's share.
+        """
+        current_app.logger.debug("--------- CALCULATING PAY FOR MEMBER ----------")
+        current_app.logger.debug(f"Member -> {getattr(member, "name", None)} with {getattr(getattr(member, "rank", None), "share", None)} shares")
+        if not member or not member.rank or not member.rank.share:
+            current_app.logger.debug(f"member or member.rank.share not found")
+            return 0.0
+        
+        member_share = member.rank.share
+        raw_value = Decimal(member_share * value_per_share)
+        return int(raw_value.to_integral_value(rounding=ROUND_DOWN))  # <-- ensures 0 decimals, as we pay only silver not silver copper
+
 
 ###################################################################################################
 #  End of File

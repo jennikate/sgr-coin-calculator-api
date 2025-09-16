@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import pytest
+import uuid
 
 from alembic import command
 from alembic.config import Config
@@ -101,15 +102,24 @@ def session(app):
 
 @pytest.fixture
 def sample_ranks(db):
+    # Fixed UUID for the default rank
+    default_rank = RankModel(
+        id=uuid.UUID("11111111-1111-1111-1111-111111111111"),
+        name="default",
+        share=0,
+        position=99
+    )
+
     ranks = [
         RankModel(name="Captain", position=1, share=1.0),
         RankModel(name="Lieutenant", position=2, share=1.0),
         RankModel(name="Blagguard", position=3, share=0.75),
         RankModel(name="Runt", position=4, share=0.5),
     ]
-    db.session.add_all(ranks)
+    db.session.add_all([*ranks, default_rank])
     db.session.commit()
     return ranks
+
 
 @pytest.fixture
 def sample_members(db, sample_ranks):
@@ -125,6 +135,7 @@ def sample_members(db, sample_ranks):
 
 @pytest.fixture
 def sample_jobs(db):
+    # These are the combinations for POSTing a new job, before members are added or payouts calculated
     jobs = [
         JobModel(
             job_name="Ogres in Hinterlands",
@@ -148,3 +159,35 @@ def sample_jobs(db):
     db.session.commit()
     return jobs
 
+
+@pytest.fixture
+def job_with_members(client, sample_jobs, sample_members):
+    """
+    Creates a job and adds members to it.
+    Returns the job id and the members added for use in tests.
+    """
+    # Take the first job from the sample_jobs fixture
+    job = sample_jobs[0]
+    job_id = job.id
+
+    # Take some members from sample_members
+    # members_to_add = [str(m.id) for m in sample_members[:3]]
+    members_to_add = [
+        str(sample_members[0].id),
+        str(sample_members[1].id),
+        str(sample_members[2].id)
+    ]
+
+    # Update the job to add members
+    update_payload = {"add_members": members_to_add}
+    response = client.patch(f"/v1/job/{job_id}", json=update_payload)
+    
+    # Ensure the update succeeded
+    assert response.status_code == 200
+
+    # Return both the job id and the members added
+    return {
+        "job_id": job_id,
+        "members": sample_members[:3],
+        "job": job
+    }

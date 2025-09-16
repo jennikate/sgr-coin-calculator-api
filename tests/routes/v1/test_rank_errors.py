@@ -10,11 +10,11 @@ This module contains a unit test for the rank & ranks endpoint resource in the `
 #  IMPORTS
 ###################################################################################################
 
-from flask import current_app
 import pytest
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from constants import DEFAULT_RANK # type: ignore
 from src.extensions import db
 
 
@@ -347,12 +347,12 @@ class TestGetSpecificRankErrors:
         }
 
     def test_get_rank_by_position_when_does_not_exist(self, client):
-        response = client.get("/v1/rank?position=99")
+        response = client.get("/v1/rank?position=200")
         
         assert response.status_code == 404
         assert response.get_json() ==  {
             "code": 404,
-            "message": "No ranks found for position: 99",
+            "message": "No ranks found for position: 200",
             "status": "Not Found"
         }
   
@@ -527,7 +527,14 @@ class TestDeleteRankErrors:
             "status": "Method Not Allowed"
         }
 
-    
+    def test_delete_default_rank(self, client):
+        response = client.delete(f"/v1/rank/{str(DEFAULT_RANK)}")
+        assert response.status_code == 400
+        assert response.get_json() ==  {
+            "code": 400,
+            "message": "You cannot delete the default rank",
+            "status": "Bad Request"
+        }
 
     def test_delete_rank_sqlalchemy_error(self, client, sample_ranks, monkeypatch):
         # Monkeypatch db.session.commit to raise SQLAlchemyError

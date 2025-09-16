@@ -14,6 +14,7 @@ import pytest
 
 from flask import current_app
 
+from constants import DEFAULT_RANK # type: ignore
 from src.api.models import RankModel # type: ignore
 
 
@@ -394,15 +395,30 @@ class TestGetAllRanks:
                 "name": sample_ranks[3].name,
                 "position": sample_ranks[3].position,
                 "share": sample_ranks[3].share 
+            },
+            { # default rank should always return as the last rank here
+                "id": str(DEFAULT_RANK),
+                "name": 'default',
+                "position": 99,
+                "share": 0 
             }
         ]
         assert data == expected_response
 
-###################################################################################################
-#  ERROR PATHS : post, get one, update, delete
-###################################################################################################
 
+class TestGetAllRanksWhenNoneExist:
+    def test_get_all_ranks_when_none_exist(self, client):
+        """
+        Tests that something is returned when no ranks exist.
+        """
+        response = client.get("/v1/ranks")
+        print(f'RANKS -> {response.get_json()}')
 
+        assert response.status_code == 200
+        data = response.get_json()
+
+        expected_response = []
+        assert data == expected_response
 
 ###################################################################################################
 #  End of file.

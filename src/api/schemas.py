@@ -7,10 +7,13 @@ This defines the Marshmallow schemas for the API.
 #  Imports
 ###################################################################################################
 
-from marshmallow import Schema, fields, post_load, validates, ValidationError # type: ignore
+from marshmallow import Schema, fields, validates, ValidationError # type: ignore
+from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field 
 from sqlalchemy import select, exists
+# TODO: refactor schemas to use the marshmallow_sqlalchemy meta pattern (see JobMemberSchema)
 
-from src.api.models import MemberModel, RankModel # type: ignore
+
+from src.api.models import JobModel, MemberJobModel, MemberModel, RankModel # type: ignore
 from src.extensions import db
 
 ###################################################################################################
@@ -122,7 +125,39 @@ class MemberQueryArgsSchema(Schema):
     rank = fields.UUID(required=False, metadata={"description": "Filter by rank id"})
 
 
-class JobSchema(Schema):
+# JOBS
+class MemberJobRequestSchema(SQLAlchemySchema):
+    class Meta:
+        model = MemberJobModel
+        load_instance = False  # only validate json, return a dict
+        # load_instance = True tells Marshmallow: “I want to deserialize JSON directly into SQLAlchemy model instances.”
+        # in PATCH cases it's considered safer to not do that because you often merge or update objects manually, not blindly load new instances.
+        
+    member_id = auto_field(required=True)
+
+
+class MemberJobResponseSchema(SQLAlchemySchema):
+    class Meta:
+        model = MemberJobModel
+        load_instance = True
+        include_fk = True  # include foreign keys if needed
+        # NOTE
+        # Without include_fk=True, Marshmallow sometimes wraps or replaces the instance when dumping fields that it doesn’t know about (like member_id), which can break fields.Method that accesses obj.member.
+        # With include_fk=True, Marshmallow knows member_id and job_id are columns, so it can serialize them directly without interfering with the model instance.
+
+    # auto_field will map columns from the model
+    member_id = auto_field()
+    member_rank = auto_field(dump_only=True)
+    # fields not in the model
+    fields.Integer(dump_only=True)
+    member_name = fields.Method("get_member_name", dump_only=True)
+    member_pay = auto_field()
+
+    def get_member_name(self, obj):
+        return obj.member.name if hasattr(obj, "member") and obj.member else None
+
+
+class BaseJobSchema(Schema):
     id = fields.UUID(dump_only=True)
     job_name = fields.Str(required=True, allow_none=False, metadata={"description": "A short name for a job", "example": "Ogres in Hinterlands"})
     job_description = fields.Str(metadata={"description": "An optional longer description", "example": "For Stromgarde, collecting horns for bounty"})
@@ -148,9 +183,30 @@ class JobSchema(Schema):
             raise ValidationError("total_silver cannot be a negative value.")
 
 
+class JobUpdateSchema(BaseJobSchema):
+    class Meta:
+        model = JobModel
+        load_instance = False  # only return dict, no automatic model instance
+
+    add_members = fields.List(fields.UUID(), required=False)        # list of UUIDs to add/merge
+    remove_members = fields.List(fields.UUID(), required=False) # list of UUIDs to remove
+
+
+class JobResponseSchema(BaseJobSchema):
+    class Meta:
+        model = JobModel
+        load_instance = True
+
+    company_cut_amt = fields.Integer(dump_only=True)
+    remainder_after_payouts = fields.Integer(dump_only=True)
+    members_on_job = fields.List(fields.Nested(MemberJobResponseSchema), dump_only=True)
+
+
 class JobQueryArgsSchema(Schema):
     start_date = fields.Date(required=False, metadata={"description": "Filter by start date"})
         
+
+
 
 ###################################################################################################
 #  End of File

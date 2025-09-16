@@ -18,7 +18,7 @@ source  .venv/bin/activate
 
 Install dependencies
 ```bash
-uv sync
+uv pip install -r requirements.txt
 ```
 
 ## Setup your .env file

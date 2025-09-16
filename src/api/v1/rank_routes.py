@@ -98,8 +98,6 @@ class RankResource(MethodView):
         if not results:
             if checked:
                 abort(404, message=f"No ranks found for {checked}: {args[checked]}")
-            else:
-                abort(404, message="No ranks found")
 
         return results
     
