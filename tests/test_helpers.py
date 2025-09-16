@@ -2,6 +2,9 @@
 This contains helper functions that can be used across the test files.
 """
 
+# TODO: refactor so this works for calling any endpoint
+# and update test files to use it for all api calls
+
 ###################################################################################################
 #  IMPORTS
 ###################################################################################################

@@ -312,9 +312,9 @@ class JobWithPaymentsById(MethodView):
         Calculate a member's pay based on their rank's share.
         """
         current_app.logger.debug("--------- CALCULATING PAY FOR MEMBER ----------")
-        current_app.logger.debug(f"Member -> {member.name} with {member.rank.share} shares")
-        if not member or not member.rank:
-            current_app.logger.debug(f"member or member.rank not found")
+        current_app.logger.debug(f"Member -> {getattr(member, "name", None)} with {getattr(getattr(member, "rank", None), "share", None)} shares")
+        if not member or not member.rank or not member.rank.share:
+            current_app.logger.debug(f"member or member.rank.share not found")
             return 0.0
         
         member_share = member.rank.share

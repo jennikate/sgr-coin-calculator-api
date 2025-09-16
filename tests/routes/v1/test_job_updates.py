@@ -155,7 +155,6 @@ class TestUpdateJob:
     def test_remove_members(self, client, job_with_members):
         """
         Tests that a user can remove a job.
-        Jobs cannot be created with members, so we must take a job and add members before removing them.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]

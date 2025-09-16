@@ -86,6 +86,34 @@ class TestUpdateJobErrors:
         assert update_response.status_code == 422
         assert update_response.get_json() == updated_expected_response
 
+    def test_update_members_that_doesnt_exist(self, client, sample_members, sample_jobs):
+        """
+        Error if user tries to add a member_uuid that doesn't exist
+        """
+        # Get an id to update
+        job_id = sample_jobs[0].id 
+
+        invalid_member = uuid4()
+        
+        updated_job = {
+            "add_members": [str(sample_members[0].id), invalid_member, str(sample_members[1].id)]
+        }
+
+        expected_response = {
+            "code": 404,
+            "message": f"Member {invalid_member} not found",
+            "status": "Not Found"
+        }
+        
+        # Call the reusable helper
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response,
+            expected_status=404
+        )
+
 
     def test_update_job_sqlalchemy_error(self, client, sample_jobs, monkeypatch):
         """
