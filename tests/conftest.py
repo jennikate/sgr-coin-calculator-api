@@ -1,5 +1,5 @@
 """
-Test configuration.
+Config for tests.
 """
 
 ###################################################################################################
@@ -7,11 +7,8 @@ Test configuration.
 ###################################################################################################
 
 import datetime
-import logging
 import os
-import sys
 import pytest
-import uuid
 
 from alembic import command
 from alembic.config import Config
@@ -27,6 +24,7 @@ from src.api.models import JobModel, MemberModel, RankModel # type: ignore
 ###################################################################################################
 # Configuration & setup
 ###################################################################################################
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MIGRATIONS_DIR = os.path.join(BASE_DIR, "migrations")
 
@@ -103,21 +101,16 @@ def session(app):
 
 @pytest.fixture
 def sample_ranks(db):
-    # Fixed UUID for the default rank
-    default_rank = RankModel(
-        id=DEFAULT_RANK,
-        name="default",
-        share=0,
-        position=99
-    )
-
+    # note the default rank should have been added as part of your migrations
+    # see docs/creation-notes.md#Creating and updating the db if you are getting
+    # errors due to missing default rank
     ranks = [
         RankModel(name="Captain", position=1, share=1.0),
         RankModel(name="Lieutenant", position=2, share=1.0),
         RankModel(name="Blagguard", position=3, share=0.75),
         RankModel(name="Runt", position=4, share=0.5),
     ]
-    db.session.add_all([*ranks, default_rank])
+    db.session.add_all(ranks)
     db.session.commit()
     return ranks
 
@@ -129,7 +122,7 @@ def sample_members(db, sample_ranks):
         MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
         MemberModel(name="Sue", rank_id=sample_ranks[2].id),
         MemberModel(name="Alice", rank_id=sample_ranks[2].id),
-        MemberModel(name="JoeDefault", rank_id=DEFAULT_RANK),
+        MemberModel(name="JoeDefault", rank_id=DEFAULT_RANK["id"]),
     ]
     db.session.add_all(members)
     db.session.commit()
@@ -193,3 +186,8 @@ def job_with_members(client, sample_jobs, sample_members):
         "members": sample_members[:3],
         "job": job
     }
+
+
+###################################################################################################
+#  END OF FILE
+###################################################################################################

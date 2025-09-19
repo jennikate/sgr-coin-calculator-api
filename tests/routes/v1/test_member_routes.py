@@ -43,7 +43,7 @@ class TestPostMember:
                 "position": 1,
                 "share": 1.0
             },
-            "status": True
+            "active": True
         }
 
         assert response.status_code == 201
@@ -76,7 +76,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[0].position),
                     "share": float(sample_ranks[0].share)
                 },
-                "status": bool(sample_members[0].status)
+                "active": bool(sample_members[0].active)
             },
             {
                 "id": str(sample_members[1].id),
@@ -87,7 +87,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             },
             {
                 "id": str(sample_members[3].id),
@@ -98,7 +98,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[3].status)
+                "active": bool(sample_members[3].active)
             },
             {
                 "id": str(sample_members[2].id),
@@ -109,24 +109,23 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[2].status)
+                "active": bool(sample_members[2].active)
             },
             {
                 "id": str(sample_members[4].id),
                 "name": str(sample_members[4].name),
                 "rank": {
-                    "id": str(DEFAULT_RANK),
+                    "id": str(DEFAULT_RANK["id"]),
                     "name": "default",
                     "position": 99,
                     "share": 0.0
                 },
-                "status": bool(sample_members[4].status)
+                "active": bool(sample_members[4].active)
             },
         ]
 
         assert response.status_code == 200
         assert response.get_json() == expected_response
-
 
     def test_get_all_members_by_rank(self, client, sample_members, sample_ranks):
         """
@@ -146,7 +145,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[3].status)
+                "active": bool(sample_members[3].active)
             },
             {
                 "id": str(sample_members[2].id),
@@ -157,24 +156,22 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[2].status)
+                "active": bool(sample_members[2].active)
             },
         ]
 
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
-
     def test_get_all_members_by_rank_no_members(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can get all members for a specific rank.
+        Tests that something is returned if a user tries to get all members by rank but none exist.
         """
         response = client.get("/v1/members?rank=" + str(sample_ranks[len(sample_ranks) -1].id))
         expected_response = [] # empty list
 
         assert response.status_code == 200
         assert response.get_json() == expected_response
-
 
     def test_get_all_members_sort_order(self, client, sample_members, sample_ranks):
         """
@@ -202,7 +199,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[0].position),
                     "share": float(sample_ranks[0].share)
                 },
-                "status": bool(sample_members[0].status)
+                "active": bool(sample_members[0].active)
             },
             {
                 "id": post_response.get_json()["id"],
@@ -213,7 +210,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             },
             {
                 "id": str(sample_members[1].id),
@@ -224,7 +221,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             },
             {
                 "id": str(sample_members[3].id),
@@ -235,7 +232,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[3].status)
+                "active": bool(sample_members[3].active)
             },
             {
                 "id": str(sample_members[2].id),
@@ -246,24 +243,23 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[2].status)
+                "active": bool(sample_members[2].active)
             },
             {
                 "id": str(sample_members[4].id),
                 "name": str(sample_members[4].name),
                 "rank": {
-                    "id": str(DEFAULT_RANK),
+                    "id": str(DEFAULT_RANK["id"]),
                     "name": "default",
                     "position": 99,
                     "share": 0.0
                 },
-                "status": bool(sample_members[4].status)
+                "active": bool(sample_members[4].active)
             },
         ]
 
         assert response.status_code == 200
         assert response.get_json() == expected_response
-
 
     def test_get_member_by_id(self, client, sample_members, sample_ranks):
         """
@@ -282,7 +278,7 @@ class TestGetMembers:
                 "position": int(sample_ranks[0].position),
                 "share": float(sample_ranks[0].share)
             },
-            "status": bool(sample_members[0].status)
+            "active": bool(sample_members[0].active)
         }
         assert response.status_code == 200
         assert response.get_json() == expected_response
@@ -292,18 +288,18 @@ class TestGetMembers:
 class TestUpdateMember:
     def test_update_member(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can update a member in the API.
+        Tests that a user can update a member.
         """
         member_id = sample_members[0].id # Get the id of a sample member
         # confirm original is not the one we will update to
         assert sample_members[0].name != "Updated"
         assert sample_members[0].rank_id != sample_ranks[2].id
-        assert sample_members[0].status != False
+        assert sample_members[0].active != False
 
         patch_data = {
             "name": "Updated",
             "rank_id": str(sample_ranks[2].id),
-            "status": False
+            "active": False
         }
 
         response = client.patch(f"/v1/member/{member_id}", json=patch_data)
@@ -319,14 +315,14 @@ class TestUpdateMember:
                 'position': int(sample_ranks[2].position), 
                 'share': float(sample_ranks[2].share)
                 }, 
-            'status': False
+            'active': False
         }
         
         assert expected_result == data
 
-    def test_update_member_name_only(self, client, sample_members, sample_ranks):
+    def test_update_member_name_only(self, client, sample_members):
         """
-        Tests that a user can update a member name only in the API.
+        Tests that a user can update a member name only.
         """
         member_id = sample_members[0].id
         # confirm original is not the one we will update to
@@ -351,14 +347,14 @@ class TestUpdateMember:
                 'position': original_member.get_json()['rank']['position'], 
                 'share': original_member.get_json()['rank']['share']
                 }, 
-            'status': original_member.get_json()['status']
+            'active': original_member.get_json()['active']
         }
         
         assert expected_result == data
 
     def test_update_member_rank_only(self, client, db, sample_members, sample_ranks):
         """
-            Tests that a user can update a member rank only in the API.
+            Tests that a user can update a member rank only.
         """
         member_id = sample_members[0].id # Get the id of a sample member
         # confirm original is not the one we will update to
@@ -381,15 +377,14 @@ class TestUpdateMember:
                 'position': int(sample_ranks[2].position), 
                 'share': float(sample_ranks[2].share)
                 }, 
-            'status': sample_members[0].status
+            'active': sample_members[0].active
         }
         
         assert expected_result == data
-
-    
-    def test_update_member_status_only(self, client, sample_members, sample_ranks):
+ 
+    def test_update_member_status_only(self, client, sample_members):
         """
-            Tests that a user can update a member status only in the API.
+        Tests that a user can update a member status only.
         """
         member_id = sample_members[0].id
         # confirm original is not the one we will update to
@@ -398,7 +393,7 @@ class TestUpdateMember:
         original_member = client.get(f"/v1/member/{member_id}")
 
         patch_data = {
-            "status": False
+            "active": False
         }
 
         response = client.patch(f"/v1/member/{member_id}", json=patch_data)
@@ -414,7 +409,7 @@ class TestUpdateMember:
                 'position': original_member.get_json()['rank']['position'], 
                 'share': original_member.get_json()['rank']['share']
                 }, 
-            'status': False
+            'active': False
         }
         
         assert expected_result == data
@@ -424,7 +419,7 @@ class TestUpdateMember:
 class TestDeleteMember:
     def test_delete_member(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can delete a member in the API.
+        Tests that a user can delete a member.
         """
         id = sample_members[1].id # Get the id of a sample member
         # verify details of the member before updates
@@ -438,7 +433,7 @@ class TestDeleteMember:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             }
         assert original_response.get_json() == original_expected_response
 
@@ -450,3 +445,8 @@ class TestDeleteMember:
         # verify member is no longer there
         new_get_response = client.get("/v1/members")
         assert original_response.get_json() not in new_get_response.get_json()
+
+
+###################################################################################################
+#  End of file.
+###################################################################################################

@@ -21,7 +21,7 @@ from src.extensions import db
 class TestGetPaymentsErrors:
     def test_get_payement_invalid_uuid(self, client):
         """
-        Errors if the uuid is malformed
+        Test errors if the uuid is malformed
         """
 
         response = client.get(f"/v1/job/notauuid/payments")
@@ -34,7 +34,7 @@ class TestGetPaymentsErrors:
 
     def test_get_payement_no_job_for_uuid(self, client):
         """
-        Errors if the uuid is valid but there's no job for it
+        Test errors if the uuid is valid but there's no job for it
         """
 
         response = client.get(f"/v1/job/{uuid4()}/payments")
@@ -49,7 +49,7 @@ class TestGetPaymentsErrors:
 class TestGetPaymentMemberErrors:
     def test_get_payment_no_members(self, client, sample_jobs):
         """
-        Errors if a job has no members associated with it
+        Test errors if a job has no members associated with it
         """
         job_id = str(sample_jobs[0].id)
 

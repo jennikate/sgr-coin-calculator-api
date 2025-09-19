@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the rank & ranks endpoint resource in the `src.api.v1/rank_routes` module.
+Tests for the rank & ranks endpoint resource in the `src.api.v1/rank_routes` module.
 """
 
 ## TODO: refactor tests to remove hardcoded values where possible
@@ -21,17 +21,6 @@ from src.extensions import db
 ###################################################################################################
 #  ERROR CASES
 ###################################################################################################
-
-class TestGetAllRanksWhenNoneExist:
-    def test_get_all_ranks_when_none_exist(self, client):
-        """
-        Tests that getting all ranks when none exist returns an empty list.
-        """
-        result = client.get("/v1/ranks")
-
-        assert result.status_code == 200
-        assert result.json == []
-
 
 class TestPostRankErrors:
     def test_post_rank_no_name(self, client):
@@ -59,7 +48,7 @@ class TestPostRankErrors:
 
     def test_post_rank_no_position(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with no position.
         """
         new_rank = {
             "name": "Captain",
@@ -82,7 +71,7 @@ class TestPostRankErrors:
 
     def test_post_rank_no_share(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with no share.
         """
         new_rank = {
             "position": 1,
@@ -105,7 +94,7 @@ class TestPostRankErrors:
 
     def test_post_rank_no_fields(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with mutliple missing keys.
         """
         new_rank = {}
         response = client.post("/v1/rank", json=new_rank)
@@ -131,7 +120,7 @@ class TestPostRankErrors:
 
     def test_post_rank_invalid_types(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with an invalid type.
         """
         new_rank = {
             "name": 1,
@@ -161,7 +150,7 @@ class TestPostRankErrors:
 
     def test_post_rank_empty_name(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with an empty string for name.
         """
         new_rank = {
             "name": "",
@@ -183,10 +172,9 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
-
     def test_post_rank_name_too_long(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with a name that's too long.
         """
         new_rank = {
             "name": "name cannot be over twenty characters",
@@ -208,10 +196,9 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
-
     def test_post_rank_position_negative(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a rank with negative integer for position.
         """
         new_rank = {
             "name": "GoodName",
@@ -233,10 +220,9 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
-
     def test_post_rank_share_negative(self, client):
         """
-        Tests the correct error shows when posting a rank with no name.
+        Tests the correct error shows when posting a negative float for share.
         """
         new_rank = {
             "name": "GoodName",
@@ -258,8 +244,10 @@ class TestPostRankErrors:
             "status": "Unprocessable Entity",
         }
 
-
     def test_post_rank_sqlalchemy_error(self, client, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a SQLAlchemyError.
+        """
         # Monkeypatch db.session.commit to raise SQLAlchemyError
         def bad_commit():
             raise SQLAlchemyError("DB error")
@@ -279,6 +267,9 @@ class TestPostRankErrors:
 
     
     def test_post_rank_generic_error(self, client, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a GenericError.
+        """
         def bad_commit():
             raise RuntimeError("Something went wrong!")
 
@@ -293,6 +284,7 @@ class TestPostRankErrors:
         assert response.status_code == 500
         data = response.get_json()
         assert "Something went wrong!" in data["message"] 
+
 
 @pytest.mark.usefixtures("sample_ranks")
 class TestPostRankAlreadyExists:
@@ -334,7 +326,7 @@ class TestPostRankAlreadyExists:
 @pytest.mark.usefixtures("sample_ranks")
 class TestGetSpecificRankErrors:
     """
-        Test that a user cannot get a rank when the query string is invalid
+    Test that a user cannot get a rank when the query string is invalid
     """
     def test_get_rank_by_name_when_does_not_exist(self, client):
         response = client.get("/v1/rank?name=Sam")
@@ -416,7 +408,7 @@ class TestGetSpecificRankErrors:
 @pytest.mark.usefixtures("sample_ranks")
 class TestUpdateRankErrors:
     """
-        Tests that a user cannot update a rank if they provide invalid details.
+    Tests that a user cannot update a rank if they provide invalid details.
     """
     def test_update_rank_that_doesnt_exist(self, client, sample_ranks):
         updated_rank = {
@@ -434,7 +426,7 @@ class TestUpdateRankErrors:
 
     def test_update_rank_with_existing_details(self, client, sample_ranks):
         """
-            Tests that a user cannot update a rank if they provide an existing name/position.
+         Tests that a user cannot update a rank if they patch existing name/position.
         """
         # Check rank exists
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
@@ -469,6 +461,9 @@ class TestUpdateRankErrors:
 
 
     def test_update_rank_sqlalchemy_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a SQLAlchemyError.
+        """
         # Monkeypatch db.session.commit to raise SQLAlchemyError
         def bad_commit():
             raise SQLAlchemyError("DB error")
@@ -488,6 +483,9 @@ class TestUpdateRankErrors:
 
     
     def test_update_rank_generic_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a GenericError.
+        """
         def bad_commit():
             raise RuntimeError("Something went wrong!")
 
@@ -508,7 +506,7 @@ class TestUpdateRankErrors:
 @pytest.mark.usefixtures("sample_ranks")
 class TestDeleteRankErrors:
     """
-        Tests that a user cannot delete a rank if they provide invalid details.
+    Tests that a user cannot delete a rank if they provide invalid details.
     """
     def test_delete_rank_that_doesnt_exist(self, client):
         response = client.delete("/v1/rank/99")
@@ -528,7 +526,7 @@ class TestDeleteRankErrors:
         }
 
     def test_delete_default_rank(self, client):
-        response = client.delete(f"/v1/rank/{str(DEFAULT_RANK)}")
+        response = client.delete(f"/v1/rank/{str(DEFAULT_RANK["id"])}")
         assert response.status_code == 400
         assert response.get_json() ==  {
             "code": 400,
@@ -537,6 +535,9 @@ class TestDeleteRankErrors:
         }
 
     def test_delete_rank_sqlalchemy_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a SQLAlchemyError.
+        """
         # Monkeypatch db.session.commit to raise SQLAlchemyError
         def bad_commit():
             raise SQLAlchemyError("DB error")
@@ -552,6 +553,9 @@ class TestDeleteRankErrors:
 
     
     def test_delete_rank_generic_error(self, client, sample_ranks, monkeypatch):
+        """
+        Tests that a 500 response with a message is returned if the PATCH raises a GenericError.
+        """
         def bad_commit():
             raise RuntimeError("Something went wrong!")
 

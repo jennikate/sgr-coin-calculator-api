@@ -9,7 +9,6 @@ This module contains test for /payments endpoint from the `src.api.v1/job_routes
 import pytest
 
 from constants import COMPANY_CUT # type: ignore
-from src.api.models import JobModel # type: ignore
 
 
 ###################################################################################################

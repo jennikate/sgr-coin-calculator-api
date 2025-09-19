@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the job & job endpoint resource in the `src.api.v1/job_routes` module.
+Tests for the job & job endpoint resource in the `src.api.v1/job_routes` module.
 """
 
 ## TODO: refactor tests to remove hardcoded values where possible

@@ -23,7 +23,6 @@ Classes:
 ###################################################################################################
 
 from constants import COMPANY_CUT, DEFAULT_RANK # type: ignore
-from datetime import date, datetime
 from decimal import Decimal, ROUND_DOWN
 from flask import current_app
 from flask.views import MethodView
@@ -33,7 +32,7 @@ from sqlalchemy.exc import SQLAlchemyError # to catch db errors
 from sqlalchemy.orm import joinedload
 from uuid import UUID
 
-from src.api.models import JobModel, MemberJobModel, MemberModel, RankModel # type: ignore
+from src.api.models import JobModel, MemberJobModel, MemberModel # type: ignore
 from src.api.schemas import JobQueryArgsSchema, BaseJobSchema, JobResponseSchema, JobUpdateSchema, MemberJobResponseSchema, MemberSchema, MessageSchema
 
 from src.extensions import db
@@ -63,6 +62,7 @@ class JobResource(MethodView):
         """
         Add a new job
         """
+        current_app.logger.debug("---------------- STARTING POST NEW JOB --------------")
         current_app.logger.debug(f"Creating job with data: {new_data}")
 
         try:
@@ -81,6 +81,8 @@ class JobResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+        current_app.logger.debug(f"Job created as: {job}")
+        current_app.logger.debug("---------------- FINISHED POST NEW JOB --------------")
         return job
 
 
@@ -95,6 +97,7 @@ class AllJobsResource(MethodView):
         """
         Get all Jobs
         """
+        current_app.logger.debug("---------------- STARTING GET ALL JOBS --------------")
         current_app.logger.debug(f"Getting jobs with args: {args}")
         query = JobModel.query
 
@@ -106,6 +109,8 @@ class AllJobsResource(MethodView):
         # Apply sorting
         jobs = query.order_by(JobModel.start_date.desc()).all()
 
+        current_app.logger.debug(f"Returning jobs: {jobs}")
+        current_app.logger.debug("---------------- FINISHED GET ALL JOBS --------------")
         return jobs
     
 
@@ -119,12 +124,17 @@ class JobByIdResource(MethodView):
         """
         Get job by id
         """
+        current_app.logger.debug("---------------- STARTING GET JOB BY ID --------------")
+        current_app.logger.debug(f"Getting job with id: {job_id}")
         try:
             data = UUID(job_id)  # converts string to UUID object
         except ValueError:
             abort(400, message="Invalid job id")
 
         job = JobModel.query.get_or_404(data)
+
+        current_app.logger.debug(f"Returning job: {job}")
+        current_app.logger.debug("---------------- FINISHED GET JOB BY ID --------------")
         return job
     
     @blp.arguments(JobUpdateSchema(partial=True)) # allow partial updates
@@ -138,7 +148,10 @@ class JobByIdResource(MethodView):
         # Marshmallow tries to coerce fields -> e.g. member_id into a uuid.UUID object.
         # If the string is not a valid UUID it raises a ValidationError.
         # Flask-Smorest catches that and returns a 422 with the error details.
-        current_app.logger.debug("---------------- STARTING PATCH --------------")
+        current_app.logger.debug("---------------- STARTING PATCH JOB --------------")
+        current_app.logger.debug(f"Patching job with id: {job_id}")
+        current_app.logger.debug(f"Patching the following data: {update_data}")
+
         try:
             job_uuid = UUID(job_id)  # converts string to UUID object
         except ValueError:
@@ -179,7 +192,7 @@ class JobByIdResource(MethodView):
                     # if we find a member and it has a default rank do not add it & prompt user to update rank first
                     # otherwise append it
                     if member:
-                        if member.rank.id == DEFAULT_RANK:
+                        if member.rank.id == DEFAULT_RANK["id"]:
                             abort(400, message=f"At least one member {member.name} ({member.id}) has DEFAULT rank, you must update them before adding to a job")
                         else:
                             job.members_on_job.append(
@@ -246,6 +259,9 @@ class JobByIdResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
         
+
+        current_app.logger.debug(f"Updated job details: {job}")
+        current_app.logger.debug("---------------- FINISHED PATCH JOB --------------")
         return job
 
     @blp.response(200, MessageSchema)
@@ -253,6 +269,8 @@ class JobByIdResource(MethodView):
         """
         Delete job by id
         """
+        current_app.logger.debug("---------------- STARTING DELETE JOB --------------")
+        current_app.logger.debug(f"Deleting job with id: {job_id}")
         try:
             data = UUID(job_id)  # converts string to UUID object
         except ValueError:
@@ -270,6 +288,8 @@ class JobByIdResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+
+        current_app.logger.debug("---------------- FINISHED DELETING JOB --------------")
         return { "message": f"job id {job_id} deleted" }, 200
 
 
@@ -284,6 +304,8 @@ class JobWithPaymentsById(MethodView):
         """
         Get job by id and calculate its payment amounts
         """
+        current_app.logger.debug("---------------- STARTING GET JOB PAYMENTS --------------")
+        current_app.logger.debug(f"Getting payments for job with id: {job_id}")
         try:
             job_uuid = UUID(job_id)  # checks it is a valid UUID format & rejects early
         except ValueError:
@@ -335,6 +357,9 @@ class JobWithPaymentsById(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+
+        current_app.logger.debug(f"Returning payments for job: {job}")
+        current_app.logger.debug("---------------- FINISH GET JOB PAYMENTS --------------")
         return job
     
     @staticmethod

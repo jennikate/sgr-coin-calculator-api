@@ -6,8 +6,7 @@ This tests the staticmethod used by /payments .
 #  IMPORTS
 ###################################################################################################
 
-import pytest
-from decimal import Decimal
+
 from src.api.v1.job_routes import JobWithPaymentsById
 
 
@@ -49,3 +48,8 @@ def test_rounds_down_decimal_values():
     result = JobWithPaymentsById.calculate_member_pay(member, value_per_share)
     # 2 * 3.333... = 6.666... -> should round down to 6
     assert result == 6
+
+
+###################################################################################################
+#  End of file.
+###################################################################################################

@@ -9,7 +9,6 @@ This contains helper functions that can be used across the test files.
 #  IMPORTS
 ###################################################################################################
 
-from flask import current_app
 
 from src import db
 
@@ -35,3 +34,8 @@ def assert_job_update(client, expected_response, job_id, updated_job, expected_s
     # Assert status code and response
     assert update_response.status_code == expected_status
     assert update_response.get_json() == expected_response
+
+
+###################################################################################################
+#  END OF FILE
+###################################################################################################

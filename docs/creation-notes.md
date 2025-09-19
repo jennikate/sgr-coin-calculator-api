@@ -3,10 +3,9 @@ Reference notes made during creation that are things I want to remember.
 
 ## Contents
 
-
-
-
-
+- [Flask App creation with uv](#flask-app-creation-with-uv)
+- [Adding / Managing dependencies](#adding--managing-dependencies)
+- [Using a src folder](#using-a-src-folder)
 
 ----
 
@@ -50,34 +49,6 @@ uv pip freeze > requirements.txt
 
 ----
 
-## Creating the db
-
-Note commands below are because I am using `uv` and a `src` folder structure.
-
-- create a postgres db `createdb -U <username> <namefordb>`
-- setup SQLAlchemy config 
-- setup env vars for 
-```bash
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-POSTGRES_DB=
-DATABASE_URL=postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-```
-- setup model(s)
-- run `uv run flask --app run:app db init`
-- run `uv run flask --app run:app db migrate -m "Initial migration"`
-- check migration version file and ensure happy
-- run `uv run flask --app run:app db upgrade`
-
-** don't forget to `import models` into `app.py`
-
-Future migrations
-- run `uv run flask --app run:app db migrate -m "<description>"`
-- check migration version file and ensure happy
-- run `uv run flask --app run:app db upgrade`
-
-----
-
 ## Using a src folder
 
 Put most of the create_app and configuration to the __init__.py within the src folder as this is what you call to run the package.
@@ -86,3 +57,17 @@ The run.py file will call the create_app() from the src folder (what is in the _
 
 Can also add the `logger` and the `CORS` setup to the run.py file.
 
+----
+
+## Cleardown DB script
+
+There is a script named cleardowndb.
+This is useful during development if you need to fully recreate the database and it's migrations.
+NOTE: if you do this, you will need to [create a seeding migration](./install-and-run.md#creating-and-updating-the-db)
+
+Before you run the cleardowndb script you need to
+- activate your venv
+- update the variables for the db within the cleardowndb script
+- run it
+- create your seed defaults migration (see instruction link above)
+- update with your seed defaults migration

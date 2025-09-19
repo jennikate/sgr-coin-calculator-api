@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the rank & ranks endpoint resource in the `src.api.v1/rank_routes` module.
+Tests for the rank & ranks endpoint resource in the `src.api.v1/rank_routes` module.
 """
 
 ## TODO: refactor tests to remove hardcoded values where possible
@@ -11,8 +11,6 @@ This module contains a unit test for the rank & ranks endpoint resource in the `
 ###################################################################################################
 
 import pytest
-
-from flask import current_app
 
 from constants import DEFAULT_RANK # type: ignore
 from src.api.models import RankModel # type: ignore
@@ -26,7 +24,7 @@ from src.api.models import RankModel # type: ignore
 class TestPostRank:
     def test_post_rank(self, client):
         """
-        Tests that a user can post a new rank to the API.
+        Tests that a user can post a new rank.
         """
         new_rank = {
             "name": "Test Rank",
@@ -53,7 +51,7 @@ class TestPostRank:
 class TestGetRankByName:
     def test_get_rank_by_name(self, client):
         """
-        Test that a user can get a rank by name
+        Test that a user can get a rank by name.
         """
         response = client.get("/v1/rank?name=Captain")
         print(f"response {response.json}")
@@ -78,7 +76,7 @@ class TestGetRankByName:
 class TestGetRankByPosition:
     def test_get_rank_by_position(self, client):
         """
-        Test that a user can get a rank by name
+        Test that a user can get a rank by position.
         """
         response = client.get("/v1/rank?position=2")
         print(f"response {response.json}")
@@ -103,7 +101,7 @@ class TestGetRankByPosition:
 class TestGetRankById:
     def test_get_rank_by_id(self, client, sample_ranks):
         """
-        Test that a user can get a rank by id
+        Test that a user can get a rank by id.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
         response = client.get(f"/v1/rank/{id}")
@@ -127,7 +125,7 @@ class TestGetRankById:
 class TestUpdateRank:
     def test_update_rank(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can update a rank.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -168,7 +166,7 @@ class TestUpdateRank:
 
     def test_update_rank_name_only(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can update just the name of a rank.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -207,7 +205,7 @@ class TestUpdateRank:
 
     def test_update_rank_position_only(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can update just the position of a rank.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -246,7 +244,7 @@ class TestUpdateRank:
 
     def test_update_rank_share_only(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can update just the share of a rank.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -285,7 +283,7 @@ class TestUpdateRank:
 
     def test_update_rank_position_and_share_only(self, client, sample_ranks):
         """
-        Tests that a user can update a rank in the API.
+        Tests that a user can update the position and share of a rank.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -330,7 +328,7 @@ class TestUpdateRank:
 class TestDeleteRank:
     def test_delete_rank(self, client, sample_ranks):
         """
-        Tests that a user can delete a rank in the API.
+        Tests that a user can delete a rank.
         """
         id = sample_ranks[0].id # Get the id of the first sample rank (Captain)
 
@@ -369,56 +367,50 @@ class TestGetAllRanks:
 
         assert response.status_code == 200
         data = response.get_json()
-        assert isinstance(data, list)
 
+        # Sort sample ranks by position like the API does
+        sorted_ranks = sorted(sample_ranks, key=lambda r: r.position)
+        
+        # Build expected response
         expected_response = [
             {
-                "id": data[0]["id"], # id is a uuid so we can't hardcode it, but we can check it exists
-                "name": sample_ranks[0].name,
-                "position": sample_ranks[0].position,
-                "share": sample_ranks[0].share 
-            },
-            {
-                "id": data[1]["id"],
-                "name": sample_ranks[1].name,
-                "position": sample_ranks[1].position,
-                "share": sample_ranks[1].share 
-            },
-            {
-                "id": data[2]["id"],
-                "name": sample_ranks[2].name,
-                "position": sample_ranks[2].position,
-                "share": sample_ranks[2].share 
-            },
-            {
-                "id": data[3]["id"],
-                "name": sample_ranks[3].name,
-                "position": sample_ranks[3].position,
-                "share": sample_ranks[3].share 
-            },
-            { # default rank should always return as the last rank here
-                "id": str(DEFAULT_RANK),
-                "name": 'default',
-                "position": 99,
-                "share": 0 
+                "id": str(getattr(r, "id", data[i]["id"])),  # id's are uuids so not set in the feature
+                "name": r.name,
+                "position": r.position,
+                "share": r.share,
             }
+            for i, r in enumerate(sorted_ranks)
         ]
+
+        # Add default rank at the end
+        expected_response.append({
+            "id": str(DEFAULT_RANK["id"]),
+            "name": "default",
+            "position": 99,
+            "share": 0
+        })
+
         assert data == expected_response
 
 
 class TestGetAllRanksWhenNoneExist:
     def test_get_all_ranks_when_none_exist(self, client):
         """
-        Tests that something is returned when no ranks exist.
+        Tests that getting all ranks when none exist returns an empty list.
         """
-        response = client.get("/v1/ranks")
-        print(f'RANKS -> {response.get_json()}')
+        result = client.get("/v1/ranks")
 
-        assert response.status_code == 200
-        data = response.get_json()
-
-        expected_response = []
-        assert data == expected_response
+        assert result.status_code == 200
+        # the database is seeded with the default rank so it ALWAYS exists
+        assert result.json == [
+            {
+                "id": str(DEFAULT_RANK["id"]),
+                "name": DEFAULT_RANK["name"],
+                "position": DEFAULT_RANK["position"],
+                "share": DEFAULT_RANK["share"]
+            }
+        ]
+        
 
 ###################################################################################################
 #  End of file.
