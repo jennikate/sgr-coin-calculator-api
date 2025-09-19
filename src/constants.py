@@ -7,9 +7,9 @@ Constants for use across the app.
 ###################################################################################################
 
 import os
-import uuid
 
 from dotenv import load_dotenv
+from uuid import UUID
 
 ###################################################################################################
 #  Constants
@@ -23,7 +23,7 @@ COMPANY_CUT = os.getenv("COMPANY_CUT", 0.1) # default to 10% if no value in env 
 # which is seeded with the values from this migration -> *_add_default_rank.py
 # see docs/creation-notes#Creating and updating the db for more details
 DEFAULT_RANK = {
-    "id": uuid.UUID("11111111-1111-1111-1111-111111111111"),
+    "id": UUID("11111111-1111-1111-1111-111111111111"),
     "name": "default",
     "position": 99,
     "share": 0

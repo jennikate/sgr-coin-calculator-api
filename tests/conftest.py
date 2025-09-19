@@ -11,7 +11,6 @@ import logging
 import os
 import sys
 import pytest
-import uuid
 
 from alembic import command
 from alembic.config import Config
