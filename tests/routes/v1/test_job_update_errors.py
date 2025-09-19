@@ -189,7 +189,7 @@ class TestUpdateJobErrors:
 
 
     # Testing model/schema validation
-    def test_update_members_with_bad_uuid(self, client, sample_members, sample_jobs):
+    def test_add_members_with_bad_uuid(self, client, sample_members, sample_jobs):
         """
         Tests that a user can update a job in the API.
         """
@@ -223,6 +223,42 @@ class TestUpdateJobErrors:
             expected_response=expected_response,
             expected_status=422
         )
+
+    def test_remove_members_with_bad_uuid(self, client, sample_members, sample_jobs):
+        """
+        Tests that a user can update a job in the API.
+        """
+        # Get an id to update
+        job_id = sample_jobs[0].id 
+        
+        updated_job = {
+            "total_silver": 83,
+            "remove_members": [str(sample_members[0].id), "baduuid", str(sample_members[1].id)]
+        }
+
+        expected_response = {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "remove_members": {
+                        "1": [
+                            "Not a valid UUID."
+                        ]
+                    }
+                }
+            },
+            "status": "Unprocessable Entity"
+        }
+        
+        # Call the reusable helper
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response,
+            expected_status=422
+        )
+        
 
         
 ###################################################################################################
