@@ -367,40 +367,29 @@ class TestGetAllRanks:
 
         assert response.status_code == 200
         data = response.get_json()
-        assert isinstance(data, list)
 
+        # Sort sample ranks by position like the API does
+        sorted_ranks = sorted(sample_ranks, key=lambda r: r.position)
+        
+        # Build expected response
         expected_response = [
             {
-                "id": data[0]["id"], # id is a uuid so we can't hardcode it, but we can check it exists
-                "name": sample_ranks[0].name,
-                "position": sample_ranks[0].position,
-                "share": sample_ranks[0].share 
-            },
-            {
-                "id": data[1]["id"],
-                "name": sample_ranks[1].name,
-                "position": sample_ranks[1].position,
-                "share": sample_ranks[1].share 
-            },
-            {
-                "id": data[2]["id"],
-                "name": sample_ranks[2].name,
-                "position": sample_ranks[2].position,
-                "share": sample_ranks[2].share 
-            },
-            {
-                "id": data[3]["id"],
-                "name": sample_ranks[3].name,
-                "position": sample_ranks[3].position,
-                "share": sample_ranks[3].share 
-            },
-            { # default rank should always return as the last rank here
-                "id": str(DEFAULT_RANK["id"]),
-                "name": 'default',
-                "position": 99,
-                "share": 0 
+                "id": str(getattr(r, "id", data[i]["id"])),  # id's are uuids so not set in the feature
+                "name": r.name,
+                "position": r.position,
+                "share": r.share,
             }
+            for i, r in enumerate(sorted_ranks)
         ]
+
+        # Add default rank at the end
+        expected_response.append({
+            "id": str(DEFAULT_RANK["id"]),
+            "name": "default",
+            "position": 99,
+            "share": 0
+        })
+
         assert data == expected_response
 
 
