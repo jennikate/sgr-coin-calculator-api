@@ -8,10 +8,9 @@ returns the Flask application instance.
 ###################################################################################################
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 
 from dotenv import load_dotenv
-from flask import Flask, current_app, jsonify
+from flask import Flask
 from flask_migrate import Migrate # type: ignore
 from flask_smorest import Api # type: ignore
 
@@ -57,7 +56,7 @@ def create_app(config_name):
     # load config from config.py
     app.config.from_object(config[config_name])
     ## commented out as this returns all the config vars, including sensitive ones.
-    ## only use in development and never in production
+    ## only use in development debugging and never in production
     # app.logger.debug(f"Config settings: {vars(config[config_name])}")
 
     # initialise and connect Flask app to SQLAlchemy

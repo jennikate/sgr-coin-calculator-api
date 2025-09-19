@@ -22,7 +22,7 @@ class TestUpdateJob:
 
     def test_update_non_payment_impacting_fields(self, client, job_with_members):
         """
-        Tests that a user can update a job in the API.
+        Tests that payment amounts do NOT reset when non payment impacting fields are updated.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]
@@ -70,7 +70,7 @@ class TestUpdateJob:
 
     def test_members_added_resets_payment(self, client, job_with_members, sample_members):
         """
-        Tests that a user can update a job in the API.
+        Tests that payment amounts are reset when new members are added.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]
@@ -133,7 +133,7 @@ class TestUpdateJob:
 
     def test_members_removed_resets_payment(self, client, job_with_members, sample_members):
         """
-        Tests that a user can update a job in the API.
+        Tests that payment amounts are reset when members are removed.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]
@@ -186,7 +186,7 @@ class TestUpdateJob:
 
     def test_silver_changed_resets_payment(self, client, job_with_members, sample_members):
         """
-        Tests that a user can update a job in the API.
+        Tests that payment amounts are reset when total_silver amount changes.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]
@@ -239,7 +239,8 @@ class TestUpdateJob:
  
     def test_silver_updated_to_same_value_doesnt_reset_payment(self, client, job_with_members, sample_members):
         """
-        Tests that a user can update a job in the API.
+        Tests that payment amounts are NOT reset when a total_silver amount is sent on the patch
+        but it has the same value as the existing total_silver amount. (i.e. not changed)
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]

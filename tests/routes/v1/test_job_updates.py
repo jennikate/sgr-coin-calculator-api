@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the job & job endpoint resource in the `src.api.v1/job_routes` module.
+Tests for the job & job endpoint resource in the `src.api.v1/job_routes` module.
 """
 
 ## TODO: refactor tests to remove hardcoded values where possible
@@ -26,7 +26,7 @@ class TestUpdateJob:
 
     def test_update_all_updatable_job_fields(self, client, sample_jobs):
         """
-        Tests that a user can update a job in the API.
+        Tests that a user can update a job.
         """
         job_id = sample_jobs[0].id # get a job to update
 
@@ -60,7 +60,7 @@ class TestUpdateJob:
 
     def test_update_some_job_fields_and_add_members(self, client, sample_members, sample_jobs):
         """
-        Tests that a user can update a job in the API.
+        Tests that a user can update some of the fields of a job, including members.
         """
         # Get an id to update
         job_id = sample_jobs[0].id 
@@ -110,7 +110,7 @@ class TestUpdateJob:
 
     def test_add_members(self, client, sample_members, sample_jobs):
         """
-        Tests that a user can update a job in the API.
+        Tests that a user can add members without other updates.
         """
         # Get an id to update
         job_id = sample_jobs[0].id 
@@ -155,7 +155,7 @@ class TestUpdateJob:
 
     def test_remove_members(self, client, job_with_members):
         """
-        Tests that a user can remove a job.
+        Tests that a user can remove members without other changes.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]
@@ -269,12 +269,11 @@ class TestUpdateJob:
         print(response.get_json())
         assert response.get_json() == expected_response
 
-    
-
     def test_remove_nonexistant_member_and_update_job(self, client, sample_members, job_with_members):
         """
-        Tests that a user can add and remove members at the same time as updating the job details.
-        Jobs cannot be created with members, so we must take a job and add members before removing them.
+        Tests that a user can try to remove a member while updating other job details.
+        As removing a member who was never on the job has 0 impact on the job we allow the user
+        to complete the rest of the update without error.
         """
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]

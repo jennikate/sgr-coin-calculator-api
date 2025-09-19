@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the job & job endpoint resource in the `src.api.v1/job_routes` module.
+Tests for PATCH errors handled for the job & job endpoint resource in the `src.api.v1/job_routes` module.
 """
 
 ## TODO: refactor tests to remove hardcoded values where possible
@@ -26,7 +26,10 @@ from tests.test_helpers import assert_job_update
 
 @pytest.mark.usefixtures("sample_jobs")
 class TestUpdateJobErrors:
-    def test_update_job_that_doesnt_exist(self, client, sample_jobs):
+    def test_update_job_that_doesnt_exist(self, client, ):
+        """
+        Tests that it errors if the job_id doesn't exist
+        """
         updated_job = {
             "job_name": "New jobs",
             "start_date": '2025-01-01',
@@ -90,7 +93,7 @@ class TestUpdateJobErrors:
 
     def test_update_members_that_doesnt_exist(self, client, sample_members, sample_jobs):
         """
-        Error if user tries to add a member_uuid that doesn't exist
+        Test that it errors if if user tries to add a member_uuid that doesn't exist
         """
         # Get an id to update
         job_id = sample_jobs[0].id 
@@ -119,7 +122,7 @@ class TestUpdateJobErrors:
     
     def test_update_members_with_default_rank(self, client, sample_members, sample_jobs):
         """
-        Error if user tries to add a member who has a default rank
+        Test that it errors if user tries to add a member who has a default rank
         """
         job_id = sample_jobs[0].id 
         default_member = next((member for member in sample_members if member.rank.id == DEFAULT_RANK["id"]), None)     
@@ -192,7 +195,7 @@ class TestUpdateJobErrors:
     # Testing model/schema validation
     def test_add_members_with_bad_uuid(self, client, sample_members, sample_jobs):
         """
-        Tests that a user can update a job in the API.
+        Tests that it errors if user tries to add a member with an invalid format uuid.
         """
         # Get an id to update
         job_id = sample_jobs[0].id 
@@ -227,7 +230,7 @@ class TestUpdateJobErrors:
 
     def test_remove_members_with_bad_uuid(self, client, sample_members, sample_jobs):
         """
-        Tests that a user can update a job in the API.
+        Tests that it errors if user tries to remove a member with an invalid format uuid.
         """
         # Get an id to update
         job_id = sample_jobs[0].id 

@@ -1,5 +1,5 @@
 """
-Test configuration.
+Config for tests.
 """
 
 ###################################################################################################
@@ -7,9 +7,7 @@ Test configuration.
 ###################################################################################################
 
 import datetime
-import logging
 import os
-import sys
 import pytest
 
 from alembic import command
@@ -26,6 +24,7 @@ from src.api.models import JobModel, MemberModel, RankModel # type: ignore
 ###################################################################################################
 # Configuration & setup
 ###################################################################################################
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MIGRATIONS_DIR = os.path.join(BASE_DIR, "migrations")
 
@@ -187,3 +186,8 @@ def job_with_members(client, sample_jobs, sample_members):
         "members": sample_members[:3],
         "job": job
     }
+
+
+###################################################################################################
+#  END OF FILE
+###################################################################################################

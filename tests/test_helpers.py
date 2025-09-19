@@ -9,7 +9,6 @@ This contains helper functions that can be used across the test files.
 #  IMPORTS
 ###################################################################################################
 
-from flask import current_app
 
 from src import db
 

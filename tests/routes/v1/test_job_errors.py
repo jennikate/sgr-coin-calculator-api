@@ -1,5 +1,5 @@
 """
-This module contains a unit test for the job & job endpoint resource in the `src.api.v1/job_routes` module.
+Tests for error handling for the job & job endpoint resource in the `src.api.v1/job_routes` module.
 """
 
 ## TODO: refactor tests to remove hardcoded values where possible
@@ -10,10 +10,10 @@ This module contains a unit test for the job & job endpoint resource in the `src
 #  IMPORTS
 ###################################################################################################
 
-from uuid import uuid4
 import pytest
 
 from sqlalchemy.exc import SQLAlchemyError
+from uuid import uuid4
 
 from src.extensions import db
 
@@ -316,7 +316,7 @@ class TestGetJobsErrors:
 @pytest.mark.usefixtures("sample_jobs")
 class TestDeleteJobErrors:
     """
-        Tests that a user cannot delete a job if they provide invalid details.
+    Tests that a user cannot delete a job if they provide invalid details.
     """
     def test_delete_job_that_doesnt_exist(self, client):
         response = client.delete("/v1/job/99")

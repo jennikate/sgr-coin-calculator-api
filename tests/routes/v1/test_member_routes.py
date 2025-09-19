@@ -127,7 +127,6 @@ class TestGetMembers:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
-
     def test_get_all_members_by_rank(self, client, sample_members, sample_ranks):
         """
         Tests that a user can get all members for a specific rank.
@@ -164,17 +163,15 @@ class TestGetMembers:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
-
     def test_get_all_members_by_rank_no_members(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can get all members for a specific rank.
+        Tests that something is returned if a user tries to get all members by rank but none exist.
         """
         response = client.get("/v1/members?rank=" + str(sample_ranks[len(sample_ranks) -1].id))
         expected_response = [] # empty list
 
         assert response.status_code == 200
         assert response.get_json() == expected_response
-
 
     def test_get_all_members_sort_order(self, client, sample_members, sample_ranks):
         """
@@ -264,7 +261,6 @@ class TestGetMembers:
         assert response.status_code == 200
         assert response.get_json() == expected_response
 
-
     def test_get_member_by_id(self, client, sample_members, sample_ranks):
         """
         Tests that a user can get a member by id.
@@ -292,7 +288,7 @@ class TestGetMembers:
 class TestUpdateMember:
     def test_update_member(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can update a member in the API.
+        Tests that a user can update a member.
         """
         member_id = sample_members[0].id # Get the id of a sample member
         # confirm original is not the one we will update to
@@ -324,9 +320,9 @@ class TestUpdateMember:
         
         assert expected_result == data
 
-    def test_update_member_name_only(self, client, sample_members, sample_ranks):
+    def test_update_member_name_only(self, client, sample_members):
         """
-        Tests that a user can update a member name only in the API.
+        Tests that a user can update a member name only.
         """
         member_id = sample_members[0].id
         # confirm original is not the one we will update to
@@ -358,7 +354,7 @@ class TestUpdateMember:
 
     def test_update_member_rank_only(self, client, db, sample_members, sample_ranks):
         """
-            Tests that a user can update a member rank only in the API.
+            Tests that a user can update a member rank only.
         """
         member_id = sample_members[0].id # Get the id of a sample member
         # confirm original is not the one we will update to
@@ -385,11 +381,10 @@ class TestUpdateMember:
         }
         
         assert expected_result == data
-
-    
-    def test_update_member_status_only(self, client, sample_members, sample_ranks):
+ 
+    def test_update_member_status_only(self, client, sample_members):
         """
-            Tests that a user can update a member status only in the API.
+        Tests that a user can update a member status only.
         """
         member_id = sample_members[0].id
         # confirm original is not the one we will update to
@@ -424,7 +419,7 @@ class TestUpdateMember:
 class TestDeleteMember:
     def test_delete_member(self, client, sample_members, sample_ranks):
         """
-        Tests that a user can delete a member in the API.
+        Tests that a user can delete a member.
         """
         id = sample_members[1].id # Get the id of a sample member
         # verify details of the member before updates
@@ -450,3 +445,8 @@ class TestDeleteMember:
         # verify member is no longer there
         new_get_response = client.get("/v1/members")
         assert original_response.get_json() not in new_get_response.get_json()
+
+
+###################################################################################################
+#  End of file.
+###################################################################################################

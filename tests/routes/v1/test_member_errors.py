@@ -268,7 +268,7 @@ class TestGetMemberErrors:
 @pytest.mark.usefixtures("sample_members", "sample_ranks")
 class TestUpdateMemberErrors:
     """
-        Tests that a user cannot update a member if they provide invalid details.
+    Tests that a user cannot update a member if they provide invalid details.
     """
     def test_update_member_that_doesnt_exist(self, client, sample_members, sample_ranks):
         updated_member = {
@@ -285,7 +285,7 @@ class TestUpdateMemberErrors:
 
     def test_update_member_with_existing_details(self, client, sample_members):
         """
-            Tests that a user cannot update a member if they provide an existing name.
+        Tests that a user cannot update a member if they provide an existing name.
         """
         member_name = sample_members[0].name # Get the name of an existing member
         other_member_id = sample_members[1].id # Get the id of a different existing member to update    
@@ -350,7 +350,7 @@ class TestUpdateMemberErrors:
 @pytest.mark.usefixtures("sample_members")
 class TestDeleteMemberErrors:
     """
-        Tests that a user cannot delete a member if they provide invalid details.
+    Tests that a user cannot delete a member if they provide invalid details.
     """
     def test_delete_member_that_doesnt_exist(self, client):
         response = client.delete("/v1/member/99")
@@ -396,3 +396,8 @@ class TestDeleteMemberErrors:
         assert response.status_code == 500
         data = response.get_json()
         assert "Something went wrong!" in data["message"] 
+
+
+###################################################################################################
+#  End of file.
+###################################################################################################
