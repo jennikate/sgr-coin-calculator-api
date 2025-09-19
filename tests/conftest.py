@@ -19,6 +19,7 @@ from sqlalchemy_utils import drop_database, create_database # type: ignore
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import inspect
 
+from constants import DEFAULT_RANK # type: ignore
 from src import create_app, db as _db
 from src.api.models import JobModel, MemberModel, RankModel # type: ignore
 
@@ -104,7 +105,7 @@ def session(app):
 def sample_ranks(db):
     # Fixed UUID for the default rank
     default_rank = RankModel(
-        id=uuid.UUID("11111111-1111-1111-1111-111111111111"),
+        id=DEFAULT_RANK,
         name="default",
         share=0,
         position=99
@@ -128,6 +129,7 @@ def sample_members(db, sample_ranks):
         MemberModel(name="Charlie", rank_id=sample_ranks[1].id),
         MemberModel(name="Sue", rank_id=sample_ranks[2].id),
         MemberModel(name="Alice", rank_id=sample_ranks[2].id),
+        MemberModel(name="JoeDefault", rank_id=DEFAULT_RANK),
     ]
     db.session.add_all(members)
     db.session.commit()

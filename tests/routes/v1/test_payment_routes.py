@@ -25,7 +25,7 @@ class TestGetPayments:
         - Validate the response structure matches JobResponseSchema
         - Validate member_pay and other calculated fields
         """
-        print("-------- STARTING TEST JOB PAY -------------")
+
         job = job_with_members["job"]
         job_id = job_with_members["job_id"]
         members = job_with_members["members"]
@@ -38,7 +38,6 @@ class TestGetPayments:
         # Validate calculated values
         # Company cut
         expected_company_cut = job.total_silver * COMPANY_CUT
-        print(f"EXP CC -> {expected_company_cut}")
         assert data["company_cut_amt"] == expected_company_cut
 
         # Value per share
@@ -61,10 +60,12 @@ class TestGetPayments:
                 "member_id": str(m.id),
                 "member_name": m.name,
                 "member_pay": int(m.rank.share * value_per_share),
-                "member_rank": m.rank.name
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
             }
             for m in [members[0], members[1], members[2]]
         ]
+
         expected_response = {
             "company_cut_amt": int(expected_company_cut), # is returned as an INT
             "id": str(job_id),

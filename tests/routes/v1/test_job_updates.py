@@ -11,6 +11,7 @@ This module contains a unit test for the job & job endpoint resource in the `src
 ###################################################################################################
 
 import pytest
+from uuid import uuid4
 
 from src import db
 from tests.test_helpers import assert_job_update
@@ -82,13 +83,15 @@ class TestUpdateJob:
                     "member_id": str(sample_members[0].id),
                     "member_name": sample_members[0].name,
                     "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[0].rank.name
+                    "member_rank": sample_members[0].rank.name,
+                    "member_rank_position": sample_members[0].rank.position
                 },
                 {
                     "member_id": str(sample_members[1].id),
                     "member_name": sample_members[1].name,
                     "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[1].rank.name
+                    "member_rank": sample_members[1].rank.name,
+                    "member_rank_position": sample_members[1].rank.position
                 }
             ],
             "remainder_after_payouts": None, # not updatable as is calculated on GET /payments
@@ -119,25 +122,23 @@ class TestUpdateJob:
             "add_members": [member_id_1, member_id_2]
         }
 
+        expected_members = [
+            {
+                "member_id": str(m.id),
+                "member_name": m.name,
+                "member_pay": None,
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
+            }
+            for m in [sample_members[0], sample_members[1]]  # only members remaining
+        ]
+
         expected_response = {
             "company_cut_amt": None, # not updatable as is calculated on GET /payments
             "id": str(sample_jobs[0].id), # id should remain the same
             "job_name": sample_jobs[0].job_name,
             "job_description": sample_jobs[0].job_description,
-            "members_on_job": [
-                {
-                    "member_id": str(sample_members[0].id),
-                    "member_name": sample_members[0].name,
-                    "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[0].rank.name
-                },
-                {
-                    "member_id": str(sample_members[1].id),
-                    "member_name": sample_members[1].name,
-                    "member_pay": None, # this is none until we GET /payments
-                    "member_rank": sample_members[1].rank.name
-                }
-            ],
+            "members_on_job": expected_members,
             "remainder_after_payouts": None, # not updatable as is calculated on GET /payments
             "start_date": str(sample_jobs[0].start_date),
             "end_date": str(sample_jobs[0].end_date),
@@ -171,7 +172,8 @@ class TestUpdateJob:
                 "member_id": str(m.id),
                 "member_name": m.name,
                 "member_pay": None,
-                "member_rank": m.rank.name
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
             }
             for m in [members[0], members[2]]  # only members remaining
         ]
@@ -228,10 +230,78 @@ class TestUpdateJob:
                 "member_id": str(m.id),
                 "member_name": m.name,
                 "member_pay": None,
-                "member_rank": m.rank.name
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
             }
-            for m in [members[0], members[2], sample_members[3]]  # originally created with 0,1,2 -> removed 1, added 3
+            for m in [members[0], members[2], sample_members[3]]  
+            # originally created with 0,1,2 -> removed 1, added sample_members[3]
         ]
+
+        expected_response = {
+            "company_cut_amt": None,
+            "id": str(job_id),
+            "job_name": job_with_members["job"].job_name,
+            "job_description": job_with_members["job"].job_description,
+            "members_on_job": sorted(expected_members, key=lambda x: (x["member_rank_position"], x["member_name"])),
+            "remainder_after_payouts": None,
+            "start_date": str(job_with_members["job"].start_date),
+            "end_date": str(job_with_members["job"].end_date),
+            "total_silver": 12500
+        }
+
+        # With the caching in tests
+        # When this called the update job handler and the PATCH was made
+        # It was still returning the object from the fixture
+        # We have to run the fixture to add members to jobs as this can't be done on job creation
+        # But this sits in the test cache and was being used for the assertion
+
+        # The most important thing is the db is updated
+        # So even though the response to the PATCH is returning the wrong data in the test due to caching
+        # We have seen it work correctly in Insomnia
+        # We can check the DB is correctly updated
+
+        client.patch(f"/v1/job/{job_id}", json=updated_job)
+
+        # Expire all cached objects so the next query gets fresh data
+        db.session.expire_all()
+
+        response = client.get(f"/v1/job/{job_id}")
+        print(response.get_json())
+        assert response.get_json() == expected_response
+
+    
+
+    def test_remove_nonexistant_member_and_update_job(self, client, sample_members, job_with_members):
+        """
+        Tests that a user can add and remove members at the same time as updating the job details.
+        Jobs cannot be created with members, so we must take a job and add members before removing them.
+        """
+        job_id = job_with_members["job_id"]
+        members = job_with_members["members"]
+
+        # Remove the second member
+        member_to_remove = uuid4() # valid UUID but not related to job
+        member_to_add = str(sample_members[3].id)
+        updated_job = {
+            "remove_members": [member_to_remove], 
+            "add_members": [member_to_add],
+            "total_silver": 12500
+        }
+
+        expected_members = [
+            {
+                "member_id": str(m.id),
+                "member_name": m.name,
+                "member_pay": None,
+                "member_rank": m.rank.name,
+                "member_rank_position": m.rank.position
+            }
+            for m in [members[0], members[1], sample_members[3], members[2], ]  
+            # member2 and member3 are the same rank - Blagguard
+            # member 3 is Alice and 2 is Sue so sort order returns in this order
+            # TODO: THIS IS BRITTLE - refactor to ignore sort order
+        ]
+
         expected_response = {
             "company_cut_amt": None,
             "id": str(job_id),
@@ -261,6 +331,7 @@ class TestUpdateJob:
         db.session.expire_all()
 
         response = client.get(f"/v1/job/{job_id}")
+        print(response.get_json())
         assert response.get_json() == expected_response
 
 

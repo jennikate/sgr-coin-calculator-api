@@ -22,7 +22,7 @@ Classes:
 #  Imports
 ###################################################################################################
 
-from constants import COMPANY_CUT # type: ignore
+from constants import COMPANY_CUT, DEFAULT_RANK # type: ignore
 from datetime import date, datetime
 from decimal import Decimal, ROUND_DOWN
 from flask import current_app
@@ -149,44 +149,54 @@ class JobByIdResource(MethodView):
             joinedload(JobModel.members_on_job).joinedload(MemberJobModel.member)
         ).get_or_404(job_uuid)
 
-        # Update job details
-        # TODO: update other resources to use this pattern
-        job_fields = {field.name for field in JobModel.__table__.columns if field.name != "id"}
-        for key, value in update_data.items():
-            if key in job_fields:
-                setattr(job, key, value)
+        ## ORDERING
+        # Bad UUIDs or other value formats are checked by Marshmallow/smorest as part of deserialization
+        # based on what we defined in model/schemas.
+        # so error out before code reaches here.
 
-        # Add / Update members
+        # We define some variables that will let us know if we need to reset payment
+        # and that its safe to run the update
+        # Having this check before updating lets us ensure nothing on the job is updated
+        # when we return an error
+        # And lets us ensure the payments are reset regardless of when the session is updated
+        # e.g. job.total_silver in session will get updated to the updated_data.total_silver value
+        # if we didn't have this counter/check and the job.total_silver updated in session before
+        # we ran the reset payment? check it may get missed because job.total_silver would equal updated_data.total_silver
+        total_members_to_add = 0
+        total_members_to_remove = 0
+        total_silver_different = "total_silver" in update_data and job.total_silver != update_data["total_silver"]
+        total_job_changes = 0
+
+        # Add members
         if "add_members" in update_data:
             for member_id in update_data.get("add_members", []):
                 member_uuid = UUID(str(member_id))
-                # We do not need to check that member_id is a correctly formatted UUID
-                # here because Marshmallow/smorest checks it as part of the deserializtion
-                # based on what we defined in model/schemas.
 
                 # check if already exists on MemberJob table and ignore if it does
                 if not any(jm.member_id == member_id for jm in job.members_on_job):
                     # if doesn't exist yet get the member model
                     member = MemberModel.query.get(member_uuid)
-                    # if we find a member then append it
+                    # if we find a member and it has a default rank do not add it & prompt user to update rank first
+                    # otherwise append it
                     if member:
-                        job.members_on_job.append(
-                            MemberJobModel(
-                                member_id=member.id,
-                                job_id=job.id,
-                                member_rank=member.rank.name,
+                        if member.rank.id == DEFAULT_RANK:
+                            abort(400, message=f"At least one member {member.name} ({member.id}) has DEFAULT rank, you must update them before adding to a job")
+                        else:
+                            job.members_on_job.append(
+                                MemberJobModel(
+                                    member_id=member.id,
+                                    job_id=job.id,
+                                    member_rank=member.rank.name,
+                                )
                             )
-                        )
+                            # update our counter so we know how many members were added
+                            total_members_to_add += 1
                     else:
                         # error out if they're trying to add a member that doesn't exist
                         abort(404, message=f"Member {member_uuid} not found")
 
         # Remove members
-        
         if "remove_members" in update_data:
-            current_app.logger.debug("---------------- TRY REMOVE MEMBERS --------------")
-            current_app.logger.debug(f"removing members: {(update_data["remove_members"])}")
-            current_app.logger.debug(f"remove_members is of length {len(update_data["remove_members"])}")
             for member_id in update_data.get("remove_members", []):
                 member_uuid = UUID(str(member_id))
 
@@ -197,8 +207,24 @@ class JobByIdResource(MethodView):
                 ).first()
 
                 if job_member:
-                    db.session.delete(job_member)
+                    db.session.delete(job_member) # remove from session but not yet from db
+                    total_members_to_remove += 1
+        
+        # Update job details 
+        job_fields = {field.name for field in JobModel.__table__.columns if field.name != "id"}
+        for key, value in update_data.items():
+            if key in job_fields:
+                setattr(job, key, value)
+                total_job_changes += 1
 
+        # Reset payments
+        if total_members_to_add > 0 or total_members_to_remove > 0 or total_silver_different:
+            current_app.logger.info("------- RESETTING PAYMENT DATA ------")
+            job.company_cut_amt = None
+            job.remainder_after_payouts = None
+            for jm in job.members_on_job:
+                jm.member_pay = None
+        
         try:
             # NOTE:
             # when we did something like job = Job.query.get_or_404(job_uuid)
@@ -209,6 +235,7 @@ class JobByIdResource(MethodView):
             # db.session.add(job) isn’t required — it’s already known to the session.
             # TODO: review other code and check if db.session.add() is needed
             db.session.commit()
+            db.session.refresh(job)
         except SQLAlchemyError as sqle:
             db.session.rollback()
             import traceback
@@ -246,6 +273,7 @@ class JobByIdResource(MethodView):
         return { "message": f"job id {job_id} deleted" }, 200
 
 
+# TODO: refactor this to make less repetitive esp around validating we have all required details
 @blp.route("/job/<job_id>/payments")
 class JobWithPaymentsById(MethodView):
     """
@@ -257,9 +285,9 @@ class JobWithPaymentsById(MethodView):
         Get job by id and calculate its payment amounts
         """
         try:
-            job_uuid = UUID(job_id)  # converts string to UUID object
+            job_uuid = UUID(job_id)  # checks it is a valid UUID format & rejects early
         except ValueError:
-            abort(400, message="Invalid job id")
+            abort(400, message=f"Invalid job -> {job_id}")
 
         # Eager-load members_on_job, member, and rank
         job = JobModel.query.options(
@@ -267,6 +295,9 @@ class JobWithPaymentsById(MethodView):
             .joinedload(MemberJobModel.member)
             .joinedload(MemberModel.rank)
         ).get_or_404(job_uuid)
+
+        if not job.members_on_job:
+            abort(400, message="Job has no members, you must PATCH some to the job before requesting payment")
 
         current_app.logger.debug("--------- CALCULATING TOTALS ----------")
 

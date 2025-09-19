@@ -7,7 +7,7 @@ This defines the Marshmallow schemas for the API.
 #  Imports
 ###################################################################################################
 
-from marshmallow import Schema, fields, validates, ValidationError # type: ignore
+from marshmallow import Schema, fields, post_dump, validates, ValidationError # type: ignore
 from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field 
 from sqlalchemy import select, exists
 # TODO: refactor schemas to use the marshmallow_sqlalchemy meta pattern (see JobMemberSchema)
@@ -149,9 +149,9 @@ class MemberJobResponseSchema(SQLAlchemySchema):
     member_id = auto_field()
     member_rank = auto_field(dump_only=True)
     # fields not in the model
-    fields.Integer(dump_only=True)
     member_name = fields.Method("get_member_name", dump_only=True)
     member_pay = auto_field()
+    member_rank_position = fields.Integer(attribute="member.rank.position")
 
     def get_member_name(self, obj):
         return obj.member.name if hasattr(obj, "member") and obj.member else None
@@ -200,6 +200,15 @@ class JobResponseSchema(BaseJobSchema):
     company_cut_amt = fields.Integer(dump_only=True)
     remainder_after_payouts = fields.Integer(dump_only=True)
     members_on_job = fields.List(fields.Nested(MemberJobResponseSchema), dump_only=True)
+
+    @post_dump
+    def sort_members(self, data, **kwargs):
+        if 'members_on_job' in data:
+            data['members_on_job'] = sorted(
+                data['members_on_job'],
+                key=lambda m: (m.get('member_rank_position', 999), m.get('member_name', ''))
+            )
+        return data
 
 
 class JobQueryArgsSchema(Schema):

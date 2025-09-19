@@ -15,6 +15,7 @@ import pytest
 from sqlalchemy.exc import SQLAlchemyError
 from uuid import uuid4
 
+from constants import DEFAULT_RANK # type: ignore
 from src.extensions import db
 from tests.test_helpers import assert_job_update
 
@@ -86,6 +87,7 @@ class TestUpdateJobErrors:
         assert update_response.status_code == 422
         assert update_response.get_json() == updated_expected_response
 
+
     def test_update_members_that_doesnt_exist(self, client, sample_members, sample_jobs):
         """
         Error if user tries to add a member_uuid that doesn't exist
@@ -112,6 +114,34 @@ class TestUpdateJobErrors:
             updated_job=updated_job,
             expected_response=expected_response,
             expected_status=404
+        )
+
+    
+    def test_update_members_with_default_rank(self, client, sample_members, sample_jobs):
+        """
+        Error if user tries to add a member who has a default rank
+        """
+        job_id = sample_jobs[0].id 
+        default_member = next((member for member in sample_members if member.rank.id == DEFAULT_RANK), None)
+
+        updated_job = {
+            "add_members": [str(sample_members[0].id), str(default_member.id), str(sample_members[1].id)]
+        }
+        print(f"UPDATE -> {updated_job}")
+
+        expected_response = {
+            "code": 400,
+            "message": f"At least one member {default_member.name} ({default_member.id}) has DEFAULT rank, you must update them before adding to a job",
+            "status": "Bad Request"
+        }
+        
+        # Call the reusable helper
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response,
+            expected_status=400
         )
 
 
@@ -159,7 +189,7 @@ class TestUpdateJobErrors:
 
 
     # Testing model/schema validation
-    def test_update_members_with_bad_uuid(self, client, sample_members, sample_jobs):
+    def test_add_members_with_bad_uuid(self, client, sample_members, sample_jobs):
         """
         Tests that a user can update a job in the API.
         """
@@ -193,6 +223,42 @@ class TestUpdateJobErrors:
             expected_response=expected_response,
             expected_status=422
         )
+
+    def test_remove_members_with_bad_uuid(self, client, sample_members, sample_jobs):
+        """
+        Tests that a user can update a job in the API.
+        """
+        # Get an id to update
+        job_id = sample_jobs[0].id 
+        
+        updated_job = {
+            "total_silver": 83,
+            "remove_members": [str(sample_members[0].id), "baduuid", str(sample_members[1].id)]
+        }
+
+        expected_response = {
+            "code": 422,
+            "errors": {
+                "json": {
+                    "remove_members": {
+                        "1": [
+                            "Not a valid UUID."
+                        ]
+                    }
+                }
+            },
+            "status": "Unprocessable Entity"
+        }
+        
+        # Call the reusable helper
+        assert_job_update(
+            client=client,
+            job_id=job_id,
+            updated_job=updated_job,
+            expected_response=expected_response,
+            expected_status=422
+        )
+        
 
         
 ###################################################################################################
