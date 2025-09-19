@@ -20,7 +20,3 @@ See [testing](/docs/testing.md)
 ## Swagger
 Run app locally then visit : `http://localhost:5000/api/swagger-ui`
 
-## Todo
-
-
-- change member.status to member.active so the bool is more accurate

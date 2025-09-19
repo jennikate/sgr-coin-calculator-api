@@ -24,8 +24,7 @@ Classes:
 
 from flask import current_app
 from flask.views import MethodView
-from marshmallow import ValidationError
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
+from sqlalchemy.exc import SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
 
@@ -39,8 +38,6 @@ from src.extensions import db
 ###################################################################################################
 #  Config
 ###################################################################################################
-# TODO: consider moving Blueprint config to a separate file
-# TODO: work out where the best place to put the url_prefix is
 
 blp = Blueprint("rank", __name__, url_prefix="/v1", description="Operations on ranks")
 
@@ -60,6 +57,7 @@ class RankResource(MethodView):
         """
         Add a new rank
         """
+        current_app.logger.debug("---------------- STARTING POST RANK --------------")
         current_app.logger.debug(f"Creating rank with data: {new_data}")
         # any validation errors occur here before we try to create the object
         # this is because the schema holds the validation
@@ -76,6 +74,8 @@ class RankResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+        current_app.logger.debug(f"Posted rank: {rank}")
+        current_app.logger.debug("---------------- FINISHED POST NEW RANK --------------")
         return rank
     
 
@@ -83,6 +83,9 @@ class RankResource(MethodView):
     @blp.response(200, RankSchema(many=True))
     def get(self, args):
         """Get ranks by query parameters"""
+        current_app.logger.debug("---------------- STARTING GET ALL RANKS --------------")
+        current_app.logger.debug(f"Getting ranks with args: {args}")
+
         query = RankModel.query
 
         if "name" in args:
@@ -94,12 +97,14 @@ class RankResource(MethodView):
         else:
             abort(400, message="At least one query parameter (name or position) must be provided")
 
-        results = query.all()
-        if not results:
+        ranks = query.all()
+        if not ranks:
             if checked:
                 abort(404, message=f"No ranks found for {checked}: {args[checked]}")
 
-        return results
+        current_app.logger.debug(f"Returning ranks: {ranks}")
+        current_app.logger.debug("---------------- FINISHED GET ALL RANKS --------------")
+        return ranks
     
     
 
@@ -113,12 +118,17 @@ class RankByIdResource(MethodView):
         """
         Get rank by id
         """
+        current_app.logger.debug("---------------- STARTING GET RANK BY ID --------------")
+        current_app.logger.debug(f"Getting ranks for id: {rank_id}")
         try:
             data = UUID(rank_id)  # converts string to UUID object
         except ValueError:
             abort(400, message="Invalid rank id")
 
         rank = RankModel.query.get_or_404(data)
+
+        current_app.logger.debug(f"Returning rank: {rank}")
+        current_app.logger.debug("---------------- FINISHED GET RANK BY ID --------------")
         return rank
     
     @blp.arguments(RankSchema(partial=True)) # allow partial updates even though all fields required in schema
@@ -127,6 +137,8 @@ class RankByIdResource(MethodView):
         """
         Update rank partially by id
         """
+        current_app.logger.debug("---------------- STARTING PATCH RANK --------------")
+        current_app.logger.debug(f"Patching rank for id: {rank_id}")
         try:
             data = UUID(rank_id)  # converts string to UUID object
         except ValueError:
@@ -151,6 +163,8 @@ class RankByIdResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
         
+        current_app.logger.debug(f"Patched rank: {rank}")
+        current_app.logger.debug("---------------- FINISHED PATCH RANK --------------")
         return rank
 
     @blp.response(200, MessageSchema)
@@ -158,6 +172,8 @@ class RankByIdResource(MethodView):
         """
         Delete rank by id
         """
+        current_app.logger.debug("---------------- STARTING DELETE RANK --------------")
+        current_app.logger.debug(f"Deleting rank for id: {rank_id}")
         try:
             data = UUID(rank_id)  # converts string to UUID object
         except ValueError:
@@ -183,6 +199,8 @@ class RankByIdResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+        current_app.logger.debug(f"Deleted rank for id: {rank_id}")
+        current_app.logger.debug("---------------- FINISHED DELETE RANK --------------")
         return { "message": f"Rank id {rank_id} deleted" }, 200
 
 
@@ -196,7 +214,11 @@ class AllRanksResource(MethodView):
         """
         Get all ranks
         """
+        current_app.logger.debug("---------------- STARTING GET ALL RANKS --------------")
         ranks = RankModel.query.order_by(RankModel.position.asc()).all()
+
+        current_app.logger.debug(f"Returning ranks: {ranks}")
+        current_app.logger.debug("---------------- FINISHED GET ALL RANKS --------------")
         return ranks
 
 ###################################################################################################

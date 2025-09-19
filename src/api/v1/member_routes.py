@@ -26,10 +26,8 @@ Classes:
 
 from flask import current_app
 from flask.views import MethodView
-from marshmallow import ValidationError
 from sqlalchemy import asc
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError # to catch db errors
-from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import SQLAlchemyError # to catch db errors
 from flask_smorest import Blueprint, abort # type: ignore
 from uuid import UUID
 
@@ -42,8 +40,6 @@ from src.extensions import db
 ###################################################################################################
 #  Config
 ###################################################################################################
-# TODO: consider moving Blueprint config to a separate file
-# TODO: work out where the best place to put the url_prefix is
 
 blp = Blueprint("member", __name__, url_prefix="/v1", description="Operations on members")
 
@@ -63,6 +59,7 @@ class MemberResource(MethodView):
         """
         Add a new member
         """
+        current_app.logger.debug("---------------- STARTING POST NEW MEMBER --------------")
         current_app.logger.debug(f"Creating member with data: {new_data}")
         try:
             member = MemberModel(**new_data)
@@ -75,6 +72,8 @@ class MemberResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+        current_app.logger.debug(f"Created member: {member}")
+        current_app.logger.debug("---------------- FINISHED POST NEW JOB --------------")
         return member
     
 
@@ -89,12 +88,17 @@ class MemberByIdResource(MethodView):
         """
         Get member by id
         """
+        current_app.logger.debug("---------------- STARTING GET MEMBER BY ID --------------")
+        current_app.logger.debug(f"Getting member id: {member_id}")
         try:
             data = UUID(member_id)  # converts string to UUID object
         except ValueError:
             abort(400, message="Invalid member id")
 
         member = MemberModel.query.get_or_404(data)
+
+        current_app.logger.debug(f"Getting member: {member}")
+        current_app.logger.debug("---------------- FINISHED GET MEMBER BY ID --------------")
         return member
         
 
@@ -104,6 +108,9 @@ class MemberByIdResource(MethodView):
         """
         Update member partially by id
         """
+        current_app.logger.debug("---------------- STARTING PATCH MEMBER BY ID --------------")
+        current_app.logger.debug(f"Patching member id: {member_id}")
+        current_app.logger.debug(f"Patching data: {update_data}")
         try:
             data = UUID(member_id)  # converts string to UUID object
         except ValueError:
@@ -128,6 +135,8 @@ class MemberByIdResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
         
+        current_app.logger.debug(f"Returning member: {member}")
+        current_app.logger.debug("---------------- FINISHED PATCH MEMBER --------------")
         return member
     
 
@@ -136,6 +145,8 @@ class MemberByIdResource(MethodView):
         """
         Delete member by id
         """
+        current_app.logger.debug("---------------- STARTING DELETE MEMBER BY ID --------------")
+        current_app.logger.debug(f"Deleting member id: {member_id}")
         try:
             data = UUID(member_id)  # converts string to UUID object
         except ValueError:
@@ -153,6 +164,8 @@ class MemberByIdResource(MethodView):
             db.session.rollback()
             abort(500, message=str(e))
 
+        current_app.logger.debug(f"Deleted member: {member_id}")
+        current_app.logger.debug("---------------- FINISHED DELETE MEMBER BY ID --------------")
         return { "message": f"Member id {member_id} deleted" }, 200
 
 
@@ -167,6 +180,7 @@ class AllMemberssResource(MethodView):
         """
         Get all members
         """
+        current_app.logger.debug("---------------- STARTING GET ALL MEMBERS --------------")
         current_app.logger.debug(f"Getting members with args: {args}")
         query = MemberModel.query.join(MemberModel.rank)
 
@@ -182,6 +196,9 @@ class AllMemberssResource(MethodView):
             MemberModel.name.asc()
         ).all()
 
+
+        current_app.logger.debug(f"Returning members: {members}")
+        current_app.logger.debug("---------------- FINISHED GET ALL MEMBERS --------------")
         return members
 
 ###################################################################################################
