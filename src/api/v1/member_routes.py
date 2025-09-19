@@ -115,8 +115,8 @@ class MemberByIdResource(MethodView):
             member.name = update_data["name"]
         if "rank_id" in update_data:
             member.rank_id = update_data["rank_id"]
-        if "status" in update_data:
-            member.status = update_data["status"]
+        if "active" in update_data:
+            member.active = update_data["active"]
 
         try:
             db.session.add(member)

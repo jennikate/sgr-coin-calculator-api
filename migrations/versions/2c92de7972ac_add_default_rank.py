@@ -1,8 +1,8 @@
 """Add default rank
 
-Revision ID: cad7dedb021d
-Revises: 3b25a412794f
-Create Date: 2025-09-19 11:22:25.074737
+Revision ID: 2c92de7972ac
+Revises: 72bc08dc5493
+Create Date: 2025-09-19 12:12:53.163125
 
 """
 from alembic import op
@@ -11,8 +11,8 @@ import uuid
 
 
 # revision identifiers, used by Alembic.
-revision = 'cad7dedb021d'
-down_revision = '3b25a412794f'
+revision = '2c92de7972ac'
+down_revision = '72bc08dc5493'
 branch_labels = None
 depends_on = None
 

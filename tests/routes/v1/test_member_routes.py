@@ -43,7 +43,7 @@ class TestPostMember:
                 "position": 1,
                 "share": 1.0
             },
-            "status": True
+            "active": True
         }
 
         assert response.status_code == 201
@@ -76,7 +76,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[0].position),
                     "share": float(sample_ranks[0].share)
                 },
-                "status": bool(sample_members[0].status)
+                "active": bool(sample_members[0].active)
             },
             {
                 "id": str(sample_members[1].id),
@@ -87,7 +87,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             },
             {
                 "id": str(sample_members[3].id),
@@ -98,7 +98,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[3].status)
+                "active": bool(sample_members[3].active)
             },
             {
                 "id": str(sample_members[2].id),
@@ -109,7 +109,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[2].status)
+                "active": bool(sample_members[2].active)
             },
             {
                 "id": str(sample_members[4].id),
@@ -120,7 +120,7 @@ class TestGetMembers:
                     "position": 99,
                     "share": 0.0
                 },
-                "status": bool(sample_members[4].status)
+                "active": bool(sample_members[4].active)
             },
         ]
 
@@ -146,7 +146,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[3].status)
+                "active": bool(sample_members[3].active)
             },
             {
                 "id": str(sample_members[2].id),
@@ -157,7 +157,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[2].status)
+                "active": bool(sample_members[2].active)
             },
         ]
 
@@ -202,7 +202,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[0].position),
                     "share": float(sample_ranks[0].share)
                 },
-                "status": bool(sample_members[0].status)
+                "active": bool(sample_members[0].active)
             },
             {
                 "id": post_response.get_json()["id"],
@@ -213,7 +213,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             },
             {
                 "id": str(sample_members[1].id),
@@ -224,7 +224,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             },
             {
                 "id": str(sample_members[3].id),
@@ -235,7 +235,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[3].status)
+                "active": bool(sample_members[3].active)
             },
             {
                 "id": str(sample_members[2].id),
@@ -246,7 +246,7 @@ class TestGetMembers:
                     "position": int(sample_ranks[2].position),
                     "share": float(sample_ranks[2].share)
                 },
-                "status": bool(sample_members[2].status)
+                "active": bool(sample_members[2].active)
             },
             {
                 "id": str(sample_members[4].id),
@@ -257,7 +257,7 @@ class TestGetMembers:
                     "position": 99,
                     "share": 0.0
                 },
-                "status": bool(sample_members[4].status)
+                "active": bool(sample_members[4].active)
             },
         ]
 
@@ -282,7 +282,7 @@ class TestGetMembers:
                 "position": int(sample_ranks[0].position),
                 "share": float(sample_ranks[0].share)
             },
-            "status": bool(sample_members[0].status)
+            "active": bool(sample_members[0].active)
         }
         assert response.status_code == 200
         assert response.get_json() == expected_response
@@ -298,12 +298,12 @@ class TestUpdateMember:
         # confirm original is not the one we will update to
         assert sample_members[0].name != "Updated"
         assert sample_members[0].rank_id != sample_ranks[2].id
-        assert sample_members[0].status != False
+        assert sample_members[0].active != False
 
         patch_data = {
             "name": "Updated",
             "rank_id": str(sample_ranks[2].id),
-            "status": False
+            "active": False
         }
 
         response = client.patch(f"/v1/member/{member_id}", json=patch_data)
@@ -319,7 +319,7 @@ class TestUpdateMember:
                 'position': int(sample_ranks[2].position), 
                 'share': float(sample_ranks[2].share)
                 }, 
-            'status': False
+            'active': False
         }
         
         assert expected_result == data
@@ -351,7 +351,7 @@ class TestUpdateMember:
                 'position': original_member.get_json()['rank']['position'], 
                 'share': original_member.get_json()['rank']['share']
                 }, 
-            'status': original_member.get_json()['status']
+            'active': original_member.get_json()['active']
         }
         
         assert expected_result == data
@@ -381,7 +381,7 @@ class TestUpdateMember:
                 'position': int(sample_ranks[2].position), 
                 'share': float(sample_ranks[2].share)
                 }, 
-            'status': sample_members[0].status
+            'active': sample_members[0].active
         }
         
         assert expected_result == data
@@ -398,7 +398,7 @@ class TestUpdateMember:
         original_member = client.get(f"/v1/member/{member_id}")
 
         patch_data = {
-            "status": False
+            "active": False
         }
 
         response = client.patch(f"/v1/member/{member_id}", json=patch_data)
@@ -414,7 +414,7 @@ class TestUpdateMember:
                 'position': original_member.get_json()['rank']['position'], 
                 'share': original_member.get_json()['rank']['share']
                 }, 
-            'status': False
+            'active': False
         }
         
         assert expected_result == data
@@ -438,7 +438,7 @@ class TestDeleteMember:
                     "position": int(sample_ranks[1].position),
                     "share": float(sample_ranks[1].share)
                 },
-                "status": bool(sample_members[1].status)
+                "active": bool(sample_members[1].active)
             }
         assert original_response.get_json() == original_expected_response
 

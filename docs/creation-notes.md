@@ -57,3 +57,17 @@ The run.py file will call the create_app() from the src folder (what is in the _
 
 Can also add the `logger` and the `CORS` setup to the run.py file.
 
+----
+
+## Cleardown DB script
+
+There is a script named cleardowndb.
+This is useful during development if you need to fully recreate the database and it's migrations.
+NOTE: if you do this, you will need to [create a seeding migration](./install-and-run.md#creating-and-updating-the-db)
+
+Before you run the cleardowndb script you need to
+- activate your venv
+- update the variables for the db within the cleardowndb script
+- run it
+- create your seed defaults migration (see instruction link above)
+- update with your seed defaults migration
