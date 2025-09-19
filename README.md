@@ -24,3 +24,6 @@ INSERT INTO ranks (id, name, position, share)
 VALUES ('11111111-1111-1111-1111-111111111111', 'default', 99, 0)
 ON CONFLICT (id) DO NOTHING;
 ```
+
+The initial migration sets up everything
+The add default migration adds the default rank

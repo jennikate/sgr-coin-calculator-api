@@ -92,7 +92,7 @@ class TestUpdateJob:
             None
         )
         # Fail the test if all members are present or if only available member has default rank
-        assert (new_member is not None and new_member.rank_id is not DEFAULT_RANK), "Unable to find a sample_member not already on job, without default rank"
+        assert (new_member is not None and new_member.rank_id is not DEFAULT_RANK["id"]), "Unable to find a sample_member not already on job, without default rank"
 
         # Create the update details
         updated_job = {

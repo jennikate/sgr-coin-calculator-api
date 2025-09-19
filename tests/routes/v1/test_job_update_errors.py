@@ -122,8 +122,8 @@ class TestUpdateJobErrors:
         Error if user tries to add a member who has a default rank
         """
         job_id = sample_jobs[0].id 
-        default_member = next((member for member in sample_members if member.rank.id == DEFAULT_RANK), None)
-
+        default_member = next((member for member in sample_members if member.rank.id == DEFAULT_RANK["id"]), None)     
+        print(f"default_member -> {default_member}")
         updated_job = {
             "add_members": [str(sample_members[0].id), str(default_member.id), str(sample_members[1].id)]
         }
@@ -134,6 +134,7 @@ class TestUpdateJobErrors:
             "message": f"At least one member {default_member.name} ({default_member.id}) has DEFAULT rank, you must update them before adding to a job",
             "status": "Bad Request"
         }
+
         
         # Call the reusable helper
         assert_job_update(

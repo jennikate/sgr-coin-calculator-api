@@ -179,7 +179,7 @@ class JobByIdResource(MethodView):
                     # if we find a member and it has a default rank do not add it & prompt user to update rank first
                     # otherwise append it
                     if member:
-                        if member.rank.id == DEFAULT_RANK:
+                        if member.rank.id == DEFAULT_RANK["id"]:
                             abort(400, message=f"At least one member {member.name} ({member.id}) has DEFAULT rank, you must update them before adding to a job")
                         else:
                             job.members_on_job.append(

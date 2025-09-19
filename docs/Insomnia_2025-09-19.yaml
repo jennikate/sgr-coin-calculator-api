@@ -1,0 +1,658 @@
+type: collection.insomnia.rest/5.0
+name: My first collection
+meta:
+  id: wrk_022bb3edb1504dd5abdbcc85a47c9e0c
+  created: 1756709683605
+  modified: 1756709683605
+  description: ""
+collection:
+  - name: Rank
+    meta:
+      id: fld_eaaf2becc5c240069566522ca5a73c15
+      created: 1756709715398
+      modified: 1756709715398
+      sortKey: -1756709715398
+      description: ""
+    children:
+      - url: "{{base_local}}/ranks"
+        name: ranks
+        meta:
+          id: req_ae1594b875bc4f97b799f7b23dd812d2
+          created: 1756709683728
+          modified: 1756710314187
+          isPrivate: false
+          description: ""
+          sortKey: -1756709719071
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/rank"
+        name: rank
+        meta:
+          id: req_3e8c67c01676404586a55ae2db244f4a
+          created: 1756709722041
+          modified: 1757944623459
+          isPrivate: false
+          description: ""
+          sortKey: -1756709722141
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            "name": "Ratter",
+                        "position": 4,
+                        "share": 1.25
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/rank?name=7"
+        name: rank by position or name
+        meta:
+          id: req_73fc088677034c7989be3a9577e6c957
+          created: 1756710681067
+          modified: 1757327629636
+          isPrivate: false
+          description: ""
+          sortKey: -1756194679894
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/rank/115eb81d7d-d516-458c-90fb-ef51d34ad48a"
+        name: rank update
+        meta:
+          id: req_9ab6fe364bee4fc4b6308cd93751266a
+          created: 1756711984054
+          modified: 1757327238125
+          isPrivate: false
+          description: ""
+          sortKey: -1756709720556
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"share": 2
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/rank/444ebbdc-c1de-4ce2-8116-3d065d62bced"
+        name: rank
+        meta:
+          id: req_8928b286f8414bc58ee3b7d02c2ea80c
+          created: 1756713773978
+          modified: 1758278221916
+          isPrivate: false
+          description: ""
+          sortKey: -1756709719813.5
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: ""
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/rank/22-5eb81d7d-d516-458c-90fb-ef51d34ad48a"
+        name: rank by id
+        meta:
+          id: req_4c22873d9c294106b1297f26e2fb4fe4
+          created: 1757070415000
+          modified: 1757327304466
+          isPrivate: false
+          description: ""
+          sortKey: -1756452199482.5
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Member
+    meta:
+      id: fld_45e087fa79244113b0d8bdc6ae1356be
+      created: 1757320971257
+      modified: 1757320971257
+      sortKey: -1756709715348
+      description: ""
+    children:
+      - url: "{{base_local}}/members"
+        name: members
+        meta:
+          id: req_2fd4c9e85bc34e4e80a2404ba2ea4f6b
+          created: 1757320971260
+          modified: 1757328763240
+          isPrivate: false
+          description: ""
+          sortKey: -1756709719071
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/member"
+        name: member
+        meta:
+          id: req_e849ec4b9d2544669926d0fd0b939b96
+          created: 1757320971261
+          modified: 1758278208553
+          isPrivate: false
+          description: ""
+          sortKey: -1756709722041
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"name": "Nelly",
+            	"rank_id": "444ebbdc-c1de-4ce2-8116-3d065d62bced"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/member/0e28238f-ae2a-42d4-b669-58ec053ea74a"
+        name: member update
+        meta:
+          id: req_9367549df5164ac9becf5e368c84dfdf
+          created: 1757320971263
+          modified: 1758278285867
+          isPrivate: false
+          description: ""
+          sortKey: -1756709720556
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"rank_id": "f8fe228f-29a3-444e-bece-19854cdbbb3d"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/member/11111111-1111-1111-1111-111111111111"
+        name: member
+        meta:
+          id: req_14f8d056cf464a2c9062c8e75f2e9544
+          created: 1757320971266
+          modified: 1757588201253
+          isPrivate: false
+          description: ""
+          sortKey: -1756709719813.5
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: ""
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/member/89228c8d-1b7a-42d9-814e-9ffdbd43524d"
+        name: member by id
+        meta:
+          id: req_7389d5584104488a89db8de5f6c13d83
+          created: 1757320971267
+          modified: 1757503538501
+          isPrivate: false
+          description: ""
+          sortKey: -1756452199482.5
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/members?rank=d421caa9-0ea9-4535-88b0-df3bd406afba"
+        name: members by rank
+        meta:
+          id: req_6e5d8602f780491fab8f8689e1f506bc
+          created: 1757512707210
+          modified: 1757513872039
+          isPrivate: false
+          description: ""
+          sortKey: -1756580959276.75
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Job
+    meta:
+      id: fld_fc7ec0cca9174081a9e738691686571b
+      created: 1757668644923
+      modified: 1757668644923
+      sortKey: -1757668644923
+      description: ""
+    children:
+      - url: "{{base_local}}/job"
+        name: job
+        meta:
+          id: req_b86f80c564a34a6b92b5e6c1a7a2911a
+          created: 1757668655467
+          modified: 1757944673371
+          isPrivate: false
+          description: ""
+          sortKey: -1757668660886
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "job_name": "Testing values",
+              "start_date": "2025-04-23",
+              "total_silver": 123
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/jobs"
+        name: jobs
+        meta:
+          id: req_a6420f75c8ee42ba96bba3a4e6e34e65
+          created: 1757676014009
+          modified: 1757928474686
+          isPrivate: false
+          description: ""
+          sortKey: -1757668660861
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/57a1306b-3521-47f5-be2d-445427165a00"
+        name: job by id
+        meta:
+          id: req_5ef3daeec28749e0a6237563fd9a2fc7
+          created: 1757679288833
+          modified: 1758027177436
+          isPrivate: false
+          description: ""
+          sortKey: -1757668660836
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/jobs?start_date=2025-04-01"
+        name: jobs by start_date
+        meta:
+          id: req_e4aa803fbc9e438ca23684b2c7419058
+          created: 1757679329104
+          modified: 1757679336964
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191463.5
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/f7ebe470-2f2e-4d42-b564-8b8e73b7e6c2"
+        name: job
+        meta:
+          id: req_4b653e9a48ee48ee9e575534436acf90
+          created: 1757679365841
+          modified: 1757928559571
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191363.5
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: ""
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/57a1306b-3521-47f5-be2d-445427165a00"
+        name: job update
+        meta:
+          id: req_b97065c1957e4190b95378ebc79ad937
+          created: 1757679375905
+          modified: 1758028401054
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191413.5
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"end_date": "2026-01-01",
+            	"job_description": "New desc NEW",
+            	"job_name": "NEW TEST JOB name",
+            	"start_date": "2025-04-01",
+            	"total_silver": 2000,
+            	"add_members": [
+            		"f92934d8-128c-40cd-9aa9-d2cc23cf7f0e",
+            		"eccf0264-7666-4c8f-927e-7e625112e513"
+             
+              ],
+            	"remove_members": [
+
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/f28b243d-1f89-4a5f-a449-d0c61370e02c"
+        name: job update with members
+        meta:
+          id: req_e2b9a5c329624361be6910cd6e7dea77
+          created: 1757926978733
+          modified: 1758278257635
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191388.5
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"add_members": [
+            		"dbdc1cca-18a0-4060-8938-eb77001e855e"
+             
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/57a1306b-3521-47f5-be2d-445427165a00"
+        name: job update to remove members
+        meta:
+          id: req_efab5d12920743dd9d85600b1553c3d2
+          created: 1757927040650
+          modified: 1758028459996
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191376
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "remove_members": [
+            		"dd819056-e290-47e1-8915-f4cf44bc81d1"
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/e407c195-557a-4a02-9017-496ff84f67ea"
+        name: job update no member changes
+        meta:
+          id: req_0c00faea5c6843658b82450069ace533
+          created: 1757932961081
+          modified: 1758028446369
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191401
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"end_date": "2025-06-01",
+            	"job_description": "new desc",
+            	"job_name": "new name",
+            	"start_date": "2025-06-01"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{base_local}}/job/57a1306b-3521-47f5-be2d-445427165a00"
+        name: job update partial data
+        meta:
+          id: req_b24ca917ac7e4595a01438c4572c027b
+          created: 1757946915534
+          modified: 1758028417830
+          isPrivate: false
+          description: ""
+          sortKey: -1757189191407.25
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"total_silver": 3000
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Payments
+    meta:
+      id: fld_ebcf02abcd3a4b64b3f7a0d148896703
+      created: 1757933899347
+      modified: 1757933899347
+      sortKey: -1757933899347
+      description: ""
+    children:
+      - url: "{{base_local}}/job/57a1306b-3521-47f5-be2d-445427165a00/payments"
+        name: job with payments by id
+        meta:
+          id: req_753c10e23a9445829785239438e83256
+          created: 1757933913213
+          modified: 1758027495707
+          isPrivate: false
+          description: ""
+          sortKey: -1757933919416
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.5.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_903ee5e1a4f19087f01ef1dc18e437d55eaa87a4
+    created: 1756709683625
+    modified: 1756709683625
+environments:
+  name: Base Environment
+  meta:
+    id: env_903ee5e1a4f19087f01ef1dc18e437d55eaa87a4
+    created: 1756709683614
+    modified: 1756710708734
+    isPrivate: false
+  data:
+    base_local: http://127.0.0.1:5000/v1

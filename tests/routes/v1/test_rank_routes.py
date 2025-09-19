@@ -397,7 +397,7 @@ class TestGetAllRanks:
                 "share": sample_ranks[3].share 
             },
             { # default rank should always return as the last rank here
-                "id": str(DEFAULT_RANK),
+                "id": str(DEFAULT_RANK["id"]),
                 "name": 'default',
                 "position": 99,
                 "share": 0 
@@ -409,16 +409,21 @@ class TestGetAllRanks:
 class TestGetAllRanksWhenNoneExist:
     def test_get_all_ranks_when_none_exist(self, client):
         """
-        Tests that something is returned when no ranks exist.
+        Tests that getting all ranks when none exist returns an empty list.
         """
-        response = client.get("/v1/ranks")
-        print(f'RANKS -> {response.get_json()}')
+        result = client.get("/v1/ranks")
 
-        assert response.status_code == 200
-        data = response.get_json()
-
-        expected_response = []
-        assert data == expected_response
+        assert result.status_code == 200
+        # the database is seeded with the default rank so it ALWAYS exists
+        assert result.json == [
+            {
+                "id": str(DEFAULT_RANK["id"]),
+                "name": DEFAULT_RANK["name"],
+                "position": DEFAULT_RANK["position"],
+                "share": DEFAULT_RANK["share"]
+            }
+        ]
+        
 
 ###################################################################################################
 #  End of file.

@@ -115,7 +115,7 @@ class TestGetMembers:
                 "id": str(sample_members[4].id),
                 "name": str(sample_members[4].name),
                 "rank": {
-                    "id": str(DEFAULT_RANK),
+                    "id": str(DEFAULT_RANK["id"]),
                     "name": "default",
                     "position": 99,
                     "share": 0.0
@@ -252,7 +252,7 @@ class TestGetMembers:
                 "id": str(sample_members[4].id),
                 "name": str(sample_members[4].name),
                 "rank": {
-                    "id": str(DEFAULT_RANK),
+                    "id": str(DEFAULT_RANK["id"]),
                     "name": "default",
                     "position": 99,
                     "share": 0.0

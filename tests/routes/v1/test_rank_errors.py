@@ -22,17 +22,6 @@ from src.extensions import db
 #  ERROR CASES
 ###################################################################################################
 
-class TestGetAllRanksWhenNoneExist:
-    def test_get_all_ranks_when_none_exist(self, client):
-        """
-        Tests that getting all ranks when none exist returns an empty list.
-        """
-        result = client.get("/v1/ranks")
-
-        assert result.status_code == 200
-        assert result.json == []
-
-
 class TestPostRankErrors:
     def test_post_rank_no_name(self, client):
         """
@@ -528,7 +517,7 @@ class TestDeleteRankErrors:
         }
 
     def test_delete_default_rank(self, client):
-        response = client.delete(f"/v1/rank/{str(DEFAULT_RANK)}")
+        response = client.delete(f"/v1/rank/{str(DEFAULT_RANK["id"])}")
         assert response.status_code == 400
         assert response.get_json() ==  {
             "code": 400,

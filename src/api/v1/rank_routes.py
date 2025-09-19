@@ -167,11 +167,11 @@ class RankByIdResource(MethodView):
         rank = RankModel.query.get_or_404(data)
 
         # If default rank, do not allow delete
-        if rank_id == str(DEFAULT_RANK):
+        if rank_id == str(DEFAULT_RANK["id"]):
             abort(400, message="You cannot delete the default rank")
 
         # Update any members who have that rank to the default rank
-        MemberModel.query.filter_by(rank_id=rank_id).update({'rank_id': DEFAULT_RANK}) # TODO: turn into protected rank and make a const
+        MemberModel.query.filter_by(rank_id=rank_id).update({'rank_id': DEFAULT_RANK["id"]}) # TODO: turn into protected rank and make a const
     
         try:
             db.session.delete(rank)
