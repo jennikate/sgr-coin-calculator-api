@@ -9,8 +9,7 @@ create_app()
 
 import os
 
-from dotenv import load_dotenv
-# from flask_migrate import Migrate # type: ignore
+from dotenv import load_dotenv # type: ignore
 
 from src import create_app
 from src.extensions import db # type: ignore
@@ -39,9 +38,12 @@ app.logger.info("---------- run.py finished ----------")
 # Entry point
 ###################################################################################################
 
-debug_mode = os.getenv("DEBUG", False)
+debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
 
 if __name__ == "__main__":
+    # Accept "1"/"0" or "true"/"false" (case-insensitive)
+    debug_env = os.getenv("FLASK_DEBUG", "0").lower()
+    debug_mode = debug_env in ("1", "true", "yes")
     app.logger.info(f"Running in debug mode? {debug_mode}")
     app.run(debug=debug_mode, host="0.0.0.0")
 

@@ -1,2 +1,30 @@
-.venv
-*.venv*
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+
+# Virtualenv
+env/
+venv/
+*venv*
+
+# Environment files
+.env
+*.local
+*env*
+
+# Git
+.git
+.gitignore
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Build artifacts
+*.egg-info
+dist/
+build/

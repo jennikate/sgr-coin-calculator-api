@@ -18,26 +18,70 @@ source  .venv/bin/activate
 
 Install dependencies
 ```bash
-uv pip install -r requirements.txt
+uv sync
 ```
 
 ## Setup your .env file
+Recommended: 
+- `.env.docker` for developing in Docker
+- `.env.local` so you can develop locally without Docker if you prefer
+- `.env.prod` so you can test production settings (in Docker)
+
+```bash
 LOG_LEVEL=DEBUG # can be: DEBUG, INFO, WARNING, ERROR, CRITICAL
-DEBUG=True # can be: True or False
+DEBUG=1 # can be: 1 (on/True) or 0 (off/False)
 FLASK_ENV=development # can be: development, production, staging, testing
 
 DBUSER=[request or create]
 DBPASSWORD=[request or create]
 DBHOST=localhost
 DBPORT=5432
-DBNAME=[request or create]
+POSTGRES_DB=[request or create]
+```
 
+## Running app
 
-## Run app locally
+You can use the `run.sh` to set the variables and run in your chosen environment.
+Or you can do it manually (see sections below).
+
+_Note: you may need to make this script executable with `chmod +x run.sh`_
+
+To run replace `local` with `docker` for Docker dev, or `prod` for production settings.
+```bash
+./run.sh local
+```
+
+### Run app locally
+This uses a local Postgres and sets debug=True, log_level=DEBUG
+
+You set your env to use `.env.local` then start the app.
 
 ```bash
 uv run python run.py
 ```
+
+### Run app with Docker in development mode
+This uses a Docker Postgres, sets debug=True, log_level=DEBUG and has a hot reload.
+The docker-compose.yml defaults to docker/dev so no need to specify Dockerfile.dev
+
+```bash
+docker-compose down -v                           
+docker-compose up --build
+```
+docker-compose down -v: -v ensures the Postgres volume is reset so the correct database is created.
+
+
+### Run app with Docker in production mode
+This uses a Docker Postgres and sets debug=False, log_level=INFO and uses Gunicorn
+```bash
+docker-compose -f docker-compose.prod.yml down -v
+docker-compose -f docker-compose.prod.yml --env-file .env.prod up --build
+```
+
+
+TODO: investigate using Gunicorn
+_Note: Gunicorn: a production ready WSGI (Web Server Gateway Interface) that handles multiple requests using multiple worker processes simultaneously, improving performance._
+_WSGI is a standard interface that enables Python applications and frameworks to communicate with web servers._
 
 
 ## Creating and updating the db
@@ -48,8 +92,8 @@ Note commands below are because I am using `uv` and a `src` folder structure.
 - setup SQLAlchemy config 
 - setup env vars for 
 ```bash
-POSTGRES_USER=
-POSTGRES_PASSWORD=
+DBUSER=
+DBPASSWORD=
 POSTGRES_DB=
 DATABASE_URL=postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 ```

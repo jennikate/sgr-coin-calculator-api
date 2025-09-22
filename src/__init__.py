@@ -8,6 +8,7 @@ returns the Flask application instance.
 ###################################################################################################
 import logging
 import os
+import secrets
 
 from dotenv import load_dotenv
 from flask import Flask
@@ -37,7 +38,16 @@ def register_blueprints(api):
 
 def create_app(config_name):
     app = Flask(__name__)
-    load_dotenv()
+
+    # Only load dotenv if FLASK_ENV is not already set (e.g., in Docker)
+    if not os.getenv("FLASK_ENV"):
+        load_dotenv(".env.local")  # for host dev
+
+    app.logger.debug('DEBUG')
+    app.logger.info('INFO')
+
+    # SECRET KEY CONFIG
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or secrets.token_hex(32)
 
     # LOGGING CONFIG
     log_level = logging.os.getenv("LOG_LEVEL", "INFO")
