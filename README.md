@@ -2,6 +2,15 @@
 Version 0.1
 The backend and API for the SGR Coin Calculator
 
+An API & database designed for use by the Roleplaying Guild to assist with their RPing of paying members for jobs.
+
+Allows a user to
+- create a rank
+- create a member with a rank
+- create a job with members
+- calculate payment for the members on the job
+- CRUD all of the above
+
 ## Made with
 
 - Python 3.13
