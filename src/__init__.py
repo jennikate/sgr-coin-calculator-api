@@ -7,12 +7,13 @@ returns the Flask application instance.
 #  Imports
 ###################################################################################################
 import logging
-from logging.handlers import RotatingFileHandler
+import os
 
 from dotenv import load_dotenv
 from flask import Flask
 from flask_migrate import Migrate # type: ignore
 from flask_smorest import Api # type: ignore
+# from logging.handlers import RotatingFileHandler # used if we want to log to file
 
 from config import config
 from src.extensions import db
@@ -39,6 +40,7 @@ def create_app(config_name):
     load_dotenv()
 
     # LOGGING CONFIG
+    log_level = logging.os.getenv("LOG_LEVEL", "INFO")
     # Remove default handler
     del app.logger.handlers[:]
 
@@ -47,10 +49,11 @@ def create_app(config_name):
     # log_handler = RotatingFileHandler("flask_api_log.log", maxBytes=10000, backupCount=1)
 
     log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s"))
-    app.logger.setLevel(logging.DEBUG) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    app.logger.setLevel(log_level) # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
     app.logger.addHandler(log_handler)
 
-    app.logger.debug("---------- starting create_app ----------")
+    app.logger.info("---------- starting create_app ----------")
+    app.logger.info(f"Log level set to: {log_level}")
     app.logger.debug(f"Config name is: {config_name}")
 
     # load config from config.py

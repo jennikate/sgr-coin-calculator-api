@@ -22,11 +22,9 @@ from src.extensions import db # type: ignore
 # db is defined in src/extensions.py
 
 load_dotenv()
-config_name = os.getenv("FLASK_ENV")
-print(f"Config name is: {config_name}")
+config_name = os.getenv("FLASK_ENV", "production")
 app = create_app(config_name)
-
-# migrate = Migrate(app, db)
+app.logger.debug(f"Config name is: {config_name}")
 
 
 app.logger.info("---------- run.py finished ----------")
@@ -41,9 +39,11 @@ app.logger.info("---------- run.py finished ----------")
 # Entry point
 ###################################################################################################
 
+debug_mode = os.getenv("DEBUG", False)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.logger.info(f"Running in debug mode? {debug_mode}")
+    app.run(debug=debug_mode, host="0.0.0.0")
 
 
 ###################################################################################################

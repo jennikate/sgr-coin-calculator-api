@@ -22,9 +22,9 @@ uv pip install -r requirements.txt
 ```
 
 ## Setup your .env file
-
-DEBUG=True
-FLASK_ENV=development
+LOG_LEVEL=DEBUG # can be: DEBUG, INFO, WARNING, ERROR, CRITICAL
+DEBUG=True # can be: True or False
+FLASK_ENV=development # can be: development, production, staging, testing
 
 DBUSER=[request or create]
 DBPASSWORD=[request or create]
