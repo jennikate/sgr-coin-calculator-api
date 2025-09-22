@@ -53,16 +53,6 @@ POSTGRES_DB=${DBNAME}
 
 ## Running app
 
-You can use the `run.sh` to set the variables and run in your chosen environment.
-Or you can do it manually (see sections below).
-
-_Note: you may need to make this script executable with `chmod +x run.sh`_
-
-To run replace `local` with `docker` for Docker dev, or `prod` for production settings.
-```bash
-./run.sh local
-```
-
 ### Run app locally
 This uses a local Postgres and sets debug=True, log_level=DEBUG
 
@@ -89,11 +79,6 @@ This uses a Docker Postgres and sets debug=False, log_level=INFO and uses Gunico
 docker-compose -f docker-compose.prod.yml down -v
 docker-compose -f docker-compose.prod.yml --env-file .env.prod up --build
 ```
-
-
-TODO: investigate using Gunicorn
-_Note: Gunicorn: a production ready WSGI (Web Server Gateway Interface) that handles multiple requests using multiple worker processes simultaneously, improving performance._
-_WSGI is a standard interface that enables Python applications and frameworks to communicate with web servers._
 
 
 ## Creating and updating the db
