@@ -18,25 +18,66 @@ source  .venv/bin/activate
 
 Install dependencies
 ```bash
-uv pip install -r requirements.txt
+uv sync
 ```
 
 ## Setup your .env file
+Recommended: 
+- `.env.docker` for developing in Docker
+- `.env.local` so you can develop locally without Docker if you prefer
+- `.env.prod` so you can test production settings (in Docker)
 
-DEBUG=True
-FLASK_ENV=development
+```bash
+# APP
+FLASK_APP=run.py
+FLASK_ENV=development # can be: development, production, staging, testing
+SECRET_KEY=some-string-for-dev
+# If SECRET_KEY is missing in prod, Flask will auto-generate a strong key at startup. (see secrets.token_hex(32) in the create_app code)
+# or can set one we want here, but make sure to keep the production secret key random and long (e.g., openssl rand -hex 32).
 
+# LOGGING
+FLASK_DEBUG=0 # 1 debug on, 0 debug off
+LOG_LEVEL=DEBUG # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# DB
 DBUSER=[request or create]
 DBPASSWORD=[request or create]
-DBHOST=localhost
+DBHOST=[request or create] # matches the Docker service name, use localhost for local dev
 DBPORT=5432
 DBNAME=[request or create]
 
+POSTGRES_USER=${DBUSER}
+POSTGRES_PASSWORD=${DBPASSWORD}
+POSTGRES_DB=${DBNAME}
+```
 
-## Run app locally
+## Running app
+
+### Run app locally
+This uses a local Postgres and sets debug=True, log_level=DEBUG
+
+You set your env to use `.env.local` then start the app.
 
 ```bash
 uv run python run.py
+```
+
+### Run app with Docker in development mode
+This uses a Docker Postgres, sets debug=True, log_level=DEBUG and has a hot reload.
+The docker-compose.yml defaults to docker/dev so no need to specify Dockerfile.dev
+
+```bash
+docker-compose down -v                           
+docker-compose up --build
+```
+docker-compose down -v: -v ensures the Postgres volume is reset so the correct database is created.
+
+
+### Run app with Docker in production mode
+This uses a Docker Postgres and sets debug=False, log_level=INFO and uses Gunicorn
+```bash
+docker-compose -f docker-compose.prod.yml down -v
+docker-compose -f docker-compose.prod.yml --env-file .env.prod up --build
 ```
 
 
@@ -48,8 +89,8 @@ Note commands below are because I am using `uv` and a `src` folder structure.
 - setup SQLAlchemy config 
 - setup env vars for 
 ```bash
-POSTGRES_USER=
-POSTGRES_PASSWORD=
+DBUSER=
+DBPASSWORD=
 POSTGRES_DB=
 DATABASE_URL=postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 ```

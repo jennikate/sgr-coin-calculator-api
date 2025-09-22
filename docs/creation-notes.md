@@ -42,9 +42,9 @@ To remove one
 uv remove <name>
 ```
 
-Updating requirements.txt
+Updating requirements lock file
 ```bash
-uv pip freeze > requirements.txt
+uv lock
 ```
 
 ----

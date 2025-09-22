@@ -1,0 +1,32 @@
+services:
+  web:
+    build:
+      context: .                                 # Make sure this is your project root
+      dockerfile: Dockerfile.dev
+    container_name: sgr_coin_calc_app
+    volumes:
+      - .:/app                                   # Mount code for hot reload
+    working_dir: /app
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_APP: run.py                          # set inline
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+    entrypoint: ["/app/entrypoint.sh"]
+
+  db:
+    image: postgres:15
+    container_name: sgr_coin_calc_db
+    restart: always
+    env_file:
+      - .env.docker
+    volumes:
+      -  db_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+   db_dev_data:
