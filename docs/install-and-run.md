@@ -28,15 +28,27 @@ Recommended:
 - `.env.prod` so you can test production settings (in Docker)
 
 ```bash
-LOG_LEVEL=DEBUG # can be: DEBUG, INFO, WARNING, ERROR, CRITICAL
-DEBUG=1 # can be: 1 (on/True) or 0 (off/False)
+# APP
+FLASK_APP=run.py
 FLASK_ENV=development # can be: development, production, staging, testing
+SECRET_KEY=some-string-for-dev
+# If SECRET_KEY is missing in prod, Flask will auto-generate a strong key at startup. (see secrets.token_hex(32) in the create_app code)
+# or can set one we want here, but make sure to keep the production secret key random and long (e.g., openssl rand -hex 32).
 
+# LOGGING
+FLASK_DEBUG=0 # 1 debug on, 0 debug off
+LOG_LEVEL=DEBUG # levels used: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# DB
 DBUSER=[request or create]
 DBPASSWORD=[request or create]
-DBHOST=localhost
+DBHOST=[request or create] # matches the Docker service name, use localhost for local dev
 DBPORT=5432
-POSTGRES_DB=[request or create]
+DBNAME=[request or create]
+
+POSTGRES_USER=${DBUSER}
+POSTGRES_PASSWORD=${DBPASSWORD}
+POSTGRES_DB=${DBNAME}
 ```
 
 ## Running app
