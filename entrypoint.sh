@@ -26,7 +26,7 @@ uv run flask --app run:app db upgrade
 echo "Starting Flask app..."
 if [ "$FLASK_ENV" = "production" ]; then
     # Production: Gunicorn
-    exec gunicorn -w 4 -b 0.0.0.0:5000 run:app
+    exec uv run gunicorn -w 4 -b 0.0.0.0:5000 run:app
 else
     # Development: Flask dev server / uv
     exec uv run python "$FLASK_APP"
